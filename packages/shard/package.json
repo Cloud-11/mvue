@@ -1,0 +1,15 @@
+{
+  "name": "@mvue/shard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "buildeOptons":{
+    "formats":["cjs","esm-bundler"]
+  }
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
