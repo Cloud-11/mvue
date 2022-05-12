@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "buildeOptons":{
-    "name":"MvueReactivity",
-    "formats":["global","cjs","esm-bundler"]
-  }
+  "buildOptions": {
+    "name": "MvueReactivity",
+    "formats": [
+      "global",
+      "cjs",
+      "esm-bundler"
+    ]
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
