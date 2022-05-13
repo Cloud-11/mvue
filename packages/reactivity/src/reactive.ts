@@ -1,7 +1,6 @@
 import isObject from "@mvue/shard";
-const enum ReactiveFlags {
-  IS_REACTIVE = "__v_isReactive",
-}
+import { mutableHandles, ReactiveFlags } from "./mutableHandles";
+
 export function reactive(target: any) {
   if (!isObject(target)) {
     return;
@@ -21,27 +20,7 @@ export function reactive(target: any) {
     return reactiveMap.get(target);
   }
 
-  const proxy = new Proxy(target, {
-    get(target, key, receiver) {
-      /*为了正确的收集属性使用Reflect
-      * let target = {
-          name:"123",
-          get name2(){
-              return this.name
-          }
-       }
-       取name2时无法正确收集name属性，
-       Reflect（反射）会将name2中的this改变为receiver(代理对象==proxy)
-      */
-      if (key === ReactiveFlags.IS_REACTIVE) {
-        return true;
-      }
-      return Reflect.get(target, key, receiver);
-    },
-    set(target, key, value, receiver) {
-      return Reflect.set(target, key, value, receiver);
-    },
-  });
+  const proxy = new Proxy(target, mutableHandles);
   reactiveMap.set(target, proxy);
   return proxy;
 }
