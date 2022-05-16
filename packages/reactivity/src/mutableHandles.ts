@@ -1,9 +1,11 @@
-import { activeEffect } from "./effect";
+import { track, trigger } from "./effect";
 
+//!!!判断是否已经代理过
+//代理过的对象 会执行判断该参数的代码
 export const enum ReactiveFlags {
   IS_REACTIVE = "__v_isReactive",
 }
-const effectFnMaps = new Map();
+
 export const mutableHandles: ProxyHandler<any> = {
   get(target, key, receiver) {
     /*为了正确的收集属性使用Reflect
@@ -19,10 +21,15 @@ export const mutableHandles: ProxyHandler<any> = {
     if (key === ReactiveFlags.IS_REACTIVE) {
       return true;
     }
-    effectFnMaps.set(key, activeEffect.fn);
+    track(target, "get", key);
     return Reflect.get(target, key, receiver);
   },
   set(target, key, value, receiver) {
-    return Reflect.set(target, key, value, receiver);
+    let oldval = target[key];
+    const result = Reflect.set(target, key, value, receiver);
+    if (oldval !== value) {
+      trigger(target, "set", key, value, oldval);
+    }
+    return result;
   },
 };
