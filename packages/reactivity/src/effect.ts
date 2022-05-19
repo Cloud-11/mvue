@@ -14,6 +14,8 @@ class ReactEffect {
       //记录父级effect
       this.parent = activeEffect;
       activeEffect = this;
+      //清理依赖
+      clearDeps(this);
       return this.fn();
     } finally {
       activeEffect = this.parent;
@@ -22,10 +24,26 @@ class ReactEffect {
   }
   //停止追踪响应式数据依赖
   stop() {
-    this.active = false;
-    clearDeps(this);
+    if (this.active) {
+      this.active = false;
+      clearDeps(this);
+    }
   }
 }
+
+//effect函数
+export function effect(fn: () => {}) {
+  const _effect = new ReactEffect(fn);
+  //初始执行一次
+  _effect.run();
+  //返回一个run函数
+  //_effect.run是一个函数，直接返回执行，会导致this指向global（window）
+  let runner = _effect.run.bind(_effect);
+  //对外暴露effect实例,可调用其他方法 effectScope
+  runner.prototype.effect = _effect;
+  return runner;
+}
+
 //清除关联依赖
 const clearDeps = (effect: ReactEffect) => {
   //循环每一个属性的set,在set里将自己删除
@@ -33,10 +51,7 @@ const clearDeps = (effect: ReactEffect) => {
     depSet.delete(effect);
   });
 };
-export function effect(fn: () => {}) {
-  const _effect = new ReactEffect(fn);
-  _effect.run();
-}
+
 //收集属性和effect
 const targetMap = new WeakMap<any, Map<string | symbol, Set<ReactEffect>>>();
 export const track = (target: any, type: string, key: string | symbol) => {
@@ -69,6 +84,6 @@ export const trigger = (
 ) => {
   const effects = targetMap.get(target)?.get(key);
   effects?.forEach((effect) => {
-    effect.run();
+    if (effect !== activeEffect) effect.run();
   });
 };
