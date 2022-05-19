@@ -4,7 +4,7 @@ class ReactEffect {
   public active = true;
   public parent: ReactEffect | null = null;
   public deps: Set<ReactEffect>[] = [];
-  constructor(public fn: () => {}) {}
+  constructor(public fn: () => void, public scheduler: () => void) {}
   run() {
     try {
       //???留一个stop接口，提供执行一次的，不关联依赖
@@ -32,15 +32,15 @@ class ReactEffect {
 }
 
 //effect函数
-export function effect(fn: () => {}) {
-  const _effect = new ReactEffect(fn);
+export function effect(fn: () => void, options = { scheduler() {} }) {
+  const _effect = new ReactEffect(fn, options.scheduler);
   //初始执行一次
   _effect.run();
   //返回一个run函数
   //_effect.run是一个函数，直接返回执行，会导致this指向global（window）
   let runner = _effect.run.bind(_effect);
   //对外暴露effect实例,可调用其他方法 effectScope
-  runner.prototype.effect = _effect;
+  runner.effect = _effect;
   return runner;
 }
 
@@ -74,7 +74,7 @@ export const track = (target: any, type: string, key: string | symbol) => {
     activeEffect.deps.push(depSet);
   }
 };
-//触发收集
+//数据改变，触发effect
 export const trigger = (
   target: any,
   type: string,
@@ -84,6 +84,9 @@ export const trigger = (
 ) => {
   const effects = targetMap.get(target)?.get(key);
   effects?.forEach((effect) => {
-    if (effect !== activeEffect) effect.run();
+    if (effect !== activeEffect) {
+      //自定义effect的执行，根据传入的参数调度
+      effect.scheduler ? effect.scheduler() : effect.run();
+    }
   });
 };
