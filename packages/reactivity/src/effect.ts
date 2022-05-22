@@ -1,6 +1,6 @@
 //effect函数
 export let activeEffect: ReactEffect | null = null;
-class ReactEffect {
+export class ReactEffect {
   public active = true;
   public parent: ReactEffect | null = null;
   public deps: Set<ReactEffect>[] = [];
@@ -68,7 +68,11 @@ export const track = (target: any, type: string, key: string | symbol) => {
     depsMap.set(key, (depSet = new Set()));
   }
   //添加activeEffect
-  if (!depSet.has(activeEffect)) {
+  trackEffect(depSet);
+};
+export const trackEffect = (depSet: Set<ReactEffect>) => {
+  //添加activeEffect
+  if (activeEffect && !depSet.has(activeEffect)) {
     depSet.add(activeEffect);
     //!!!反向关联，每一个effect 存储每个属性的effects,方便清除依赖,停止追踪
     activeEffect.deps.push(depSet);
@@ -82,7 +86,9 @@ export const trigger = (
   value: any,
   oldval: any
 ) => {
-  const effects = targetMap.get(target)?.get(key);
+  triggerEffect(targetMap.get(target)?.get(key));
+};
+export const triggerEffect = (effects: Set<ReactEffect> | undefined) => {
   effects?.forEach((effect) => {
     if (effect !== activeEffect) {
       //自定义effect的执行，根据传入的参数调度
