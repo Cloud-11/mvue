@@ -28,13 +28,14 @@ class ComputedRefImpl {
     //收集依赖收集的是get计算属性的依赖,而触发更新是计算属性依赖的里面的reactive的属性()
     trackEffect(this.dep);
     if (this._dirty) {
+      //先修改，否则导致触发依赖时循环,会不停的触发get
+      this._dirty = false;
       //computed内的函数会运行，然后返回计算属性
       //computed的方法
       //effect收集的只是内部的属性变化，没有关联最后的计算属性(_value)
       //所以，即使computed里的函数依赖的属性变化了，最后返回的计算属性也不会触发更新，因为根本没关联
       //第一次此处会进行effect的收集, 建立 计算属性依赖的属性和getter的依赖，即 此处等于正常的effect和属性
       this._value = this.effect.run();
-      this._dirty = false;
     }
     return this._value;
   }

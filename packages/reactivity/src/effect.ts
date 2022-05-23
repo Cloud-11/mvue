@@ -4,7 +4,7 @@ export class ReactEffect {
   public active = true;
   public parent: ReactEffect | null = null;
   public deps: Set<ReactEffect>[] = [];
-  constructor(public fn: () => void, public scheduler: () => void) {}
+  constructor(public fn: () => void, public scheduler: any) {}
   run() {
     try {
       //???留一个stop接口，提供执行一次的，不关联依赖
@@ -32,8 +32,8 @@ export class ReactEffect {
 }
 
 //effect函数
-export function effect(fn: () => void, options = { scheduler() {} }) {
-  const _effect = new ReactEffect(fn, options.scheduler);
+export function effect(fn: () => void, options: any) {
+  const _effect = new ReactEffect(fn, options?.scheduler);
   //初始执行一次
   _effect.run();
   //返回一个run函数
@@ -89,10 +89,16 @@ export const trigger = (
   triggerEffect(targetMap.get(target)?.get(key));
 };
 export const triggerEffect = (effects: Set<ReactEffect> | undefined) => {
+  //拷贝一份来执行,否则死循环！！？？
+  effects = new Set(effects);
   effects?.forEach((effect) => {
     if (effect !== activeEffect) {
       //自定义effect的执行，根据传入的参数调度
-      effect.scheduler ? effect.scheduler() : effect.run();
+      if (effect.scheduler) {
+        effect.scheduler();
+      } else {
+        effect.run();
+      }
     }
   });
 };

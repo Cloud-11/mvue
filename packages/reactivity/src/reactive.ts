@@ -1,4 +1,4 @@
-import isObject from "@mvue/shard";
+import { isObject } from "@mvue/shard";
 import { mutableHandles, ReactiveFlags } from "./mutableHandles";
 
 export function reactive(target: any) {
