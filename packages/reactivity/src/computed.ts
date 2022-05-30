@@ -1,4 +1,4 @@
-import { isFunction } from "../../shard/src/index";
+import { isFunction } from "@mvue/shard/";
 import { ReactEffect, trackEffect, triggerEffect } from "./effect";
 
 class ComputedRefImpl {

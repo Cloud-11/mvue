@@ -1,6 +1,6 @@
 import { track, trigger } from "./effect";
-import { isObject } from "../../shard/src/index";
-import { reactive } from "./reactive";
+import { isObject } from "@mvue/shard";
+import { reactive } from "@mvue/reactivity";
 
 //!!!判断是否已经代理过
 //代理过的对象 会执行判断该参数的代码
