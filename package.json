@@ -3,15 +3,26 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.js reactivity -f global"
+    "dev": "node scripts/dev.js reactivity -f global",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --watchAll"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@mvue/(.*)$": "<rootDir>/packages/$1/src"
+    },
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "esbuild": "^0.14.38",
+    "jest": "^28.1.0",
     "minimist": "^1.2.6",
+    "ts-jest": "^28.0.3",
     "typescript": "^4.6.4"
   }
 }
