@@ -38,7 +38,7 @@ export function effect(fn: () => void, options: any) {
   _effect.run();
   //返回一个run函数
   //_effect.run是一个函数，直接返回执行，会导致this指向global（window）
-  let runner = _effect.run.bind(_effect);
+  let runner: { [key: string]: any } = _effect.run.bind(_effect);
   //对外暴露effect实例,可调用其他方法 effectScope
   runner.effect = _effect;
   return runner;
