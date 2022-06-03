@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev.js reactivity -f global",
+    "dev": "node scripts/dev.cjs reactivity -f global",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --watchAll",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage"
   },
