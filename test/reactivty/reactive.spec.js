@@ -1,4 +1,4 @@
-import { readonly, toRaw, reactive } from "@mvue/reactivity";
+import { readonly, toRaw, reactive, markRaw } from "@mvue/reactivity";
 import { jest } from "@jest/globals";
 
 describe("reactive test", () => {
@@ -32,5 +32,12 @@ describe("toRaw test", () => {
     const wrapped = reactive(original);
     expect(wrapped).not.toBe(original);
     expect(toRaw(wrapped)).toBe(original);
+  });
+});
+describe("makeRaw test", () => {
+  it("makeRaw代理对象", () => {
+    const original = { foo: 1, bar: { baz: 2 } };
+    const wrapped = reactive(markRaw(original));
+    expect(wrapped).toBe(original);
   });
 });
