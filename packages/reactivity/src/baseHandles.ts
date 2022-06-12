@@ -1,6 +1,6 @@
 import { track, trigger } from "./effect";
-import { isObject, isRef, isSymbol } from "@mvue/shard";
-import { reactive, ReactiveFlags } from "@mvue/reactivity";
+import { isObject, ReactiveFlags, isSymbol } from "@mvue/shard";
+import { reactive } from "@mvue/reactivity";
 import { readonly } from "./reactive";
 
 function makeMap(str: string) {
@@ -15,6 +15,10 @@ function makeMap(str: string) {
 const isNonTrackableKeys = makeMap(`__proto__,__v_isRef,__isVue`);
 
 //获取symbol属性
+const a = Object.getOwnPropertyNames(Symbol);
+console.log(isSymbol);
+console.log(a.map((key) => (Symbol as any)[key]).filter(isSymbol));
+
 const builtInSymbols = new Set(
   Object.getOwnPropertyNames(Symbol)
     .map((key) => (Symbol as any)[key])

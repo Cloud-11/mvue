@@ -1,4 +1,7 @@
-import { ReactiveFlags, Target } from "@mvue/reactivity";
+import type { Target } from "@mvue/reactivity";
+import { ReactiveFlags } from "./reactiveFlags";
+export * from "./reactiveFlags";
+export * from "./shapeFlags";
 
 /**
  * isObject
@@ -7,14 +10,14 @@ import { ReactiveFlags, Target } from "@mvue/reactivity";
  */
 export const isArray = Array.isArray;
 
-export const isRef = (val: unknown): boolean => !!(val && (val as Target)[ReactiveFlags.IS_REF]);
+export const isRef = (val: unknown): boolean => !!(val as Target)?.[ReactiveFlags.IS_REF];
 export function isReactive(val: unknown): boolean {
   if (isReadonly(val)) {
     return isReactive((val as Target)[ReactiveFlags.RAW]);
   }
-  return !!(val && (val as Target)[ReactiveFlags.IS_REACTIVE]);
+  return !!(val as Target)?.[ReactiveFlags.IS_REACTIVE];
 }
-export const isReadonly = (val: unknown) => !!(val && (val as Target)[ReactiveFlags.IS_READONLY]);
+export const isReadonly = (val: unknown) => !!(val as Target)?.[ReactiveFlags.IS_READONLY];
 export const isProxy = (val: unknown) => isReactive(val) || isReadonly(val);
 
 export const objectToString = Object.prototype.toString;
@@ -32,3 +35,5 @@ export const isObject = (val: unknown): val is Record<any, any> =>
 export const isPromise = <T = any>(val: unknown): val is Promise<T> => {
   return isObject(val) && isFunction(val.then) && isFunction(val.catch);
 };
+
+export const isVNode = (val: unknown): boolean => !!(val as any)?.["__v_VNode"];
