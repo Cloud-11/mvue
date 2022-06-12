@@ -7,7 +7,29 @@
     <title>runtime-dom</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app" style="border: 1px solid red; width: auto"></div>
   </body>
-  <script></script>
+  <script src="../dist/runtime-dom.global.js"></script>
+  <script>
+    const { h, createRenderer, renderOptions } = MvueRuntimeDom;
+    const render = createRenderer(renderOptions).render;
+    render(
+      h(
+        "div",
+        {
+          id: "aa",
+          style: {
+            border: "1px solid red",
+            fontSize: "20px",
+          },
+          onClick: () => {
+            console.log(1);
+          },
+        },
+        [h("span", "hello world")]
+      ),
+      document.querySelector("#app")
+    );
+    console.log(document.getElementById("aa"));
+  </script>
 </html>

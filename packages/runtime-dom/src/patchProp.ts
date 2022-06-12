@@ -8,23 +8,18 @@ import { patchStyle } from "../modules/style";
 const onRex = /^on[^a-z]/;
 export const isOn = (key: string) => onRex.test(key);
 
-export const patchProp = (
-  el: Node,
-  key: string,
-  preValue: object | string,
-  nextValue: object | string
-) => {
+export const patchProp = (el: Element, key: string, preValue: any, nextValue: any) => {
   //class
   if (key === "class") {
-    patchClass(el, key, preValue, nextValue);
+    patchClass(el, nextValue as string);
   } else if (key === "style") {
     //style
-    patchStyle(el, preValue, nextValue);
+    patchStyle(el as HTMLElement, preValue, nextValue);
   } else if (isOn(key)) {
     //events
-    patchEvent(el, preValue, nextValue);
+    patchEvent(el, key, nextValue);
   } else {
     //attrs
-    patchAttrs(el, key, preValue, nextValue);
+    patchAttrs(el, key, nextValue);
   }
 };
