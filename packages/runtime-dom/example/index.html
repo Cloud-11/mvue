@@ -7,12 +7,14 @@
     <title>runtime-dom</title>
   </head>
   <body>
-    <div id="app" style="border: 1px solid red; width: auto"></div>
+    <div id="app"></div>
+    <button onclick="newdom()">改变dom</button>
   </body>
   <script src="../dist/runtime-dom.global.js"></script>
   <script>
-    const { h, createRenderer, renderOptions } = MvueRuntimeDom;
-    const render = createRenderer(renderOptions).render;
+    const { h, createRenderer, render, Text } = MvueRuntimeDom;
+    const app = document.querySelector("#app");
+
     render(
       h(
         "div",
@@ -26,10 +28,12 @@
             console.log(1);
           },
         },
-        [h("span", "hello world")]
+        ["asd", h("span", "hello world"), "123"]
       ),
-      document.querySelector("#app")
+      app
     );
-    console.log(document.getElementById("aa"));
+    function newdom() {
+      render(h(Text, "123"), app);
+    }
   </script>
 </html>

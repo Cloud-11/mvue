@@ -1,5 +1,7 @@
 import { isArray } from "@mvue/shard/";
 import { isString, ShapeFlags } from "@mvue/shard";
+//文本节点vnode类型
+export const Text = Symbol("Text");
 export interface Component {}
 export interface RendererNode {
   [key: string]: any;
@@ -17,12 +19,16 @@ export interface VNode<
   props: ExtraProps | null;
   key: string | number | symbol | null;
   el: HostNode | null;
-  children: VNode[] | string | undefined;
+  children: VNode[] | string | null;
   shapeFlag: ShapeFlags;
 }
 //创建虚拟节点
 //组件，元素，文本
-export function createVnode(type: string, props: any, children?: VNode[] | string): VNode {
+export function createVnode(
+  type: string | symbol,
+  props: any,
+  children: VNode[] | string | null = null
+): VNode {
   //children  <div>123</div>  <div><span>123</span></div>
   //设置主类型
   let shapeFlag = isString(type) ? ShapeFlags.ELEMENT : ShapeFlags.COMPONENT;
@@ -37,16 +43,14 @@ export function createVnode(type: string, props: any, children?: VNode[] | strin
     shapeFlag,
   };
   if (children) {
-    let type = 0;
-    if (isArray(children)) {
-      type = ShapeFlags.ARRAY_CHILDREN;
-    } else {
-      children = String(children);
-      type = ShapeFlags.TEXT_CHILDREN;
-    }
     //包含子节点 | 或运算符
     //node主类型包含子类型
-    VNode.shapeFlag |= type;
+    VNode.shapeFlag |= isArray(children) ? ShapeFlags.ARRAY_CHILDREN : ShapeFlags.TEXT_CHILDREN;
   }
   return VNode;
 }
+//根据children[] type创建vnode
+export const normalizeVNode = (child: VNode | string) => {
+  //将字符串children转换为vnode
+  return isString(child) ? createVnode(Text, null, child) : child;
+};

@@ -1,3 +1,4 @@
+import { VNode } from "./../../runtime-core/src/vnode";
 import type { Target } from "@mvue/reactivity";
 import { ReactiveFlags } from "./reactiveFlags";
 export * from "./reactiveFlags";
@@ -37,3 +38,7 @@ export const isPromise = <T = any>(val: unknown): val is Promise<T> => {
 };
 
 export const isVNode = (val: unknown): boolean => !!(val as any)?.["__v_VNode"];
+
+export const isSameVnode = (n1: VNode, n2: VNode): boolean => {
+  return n1.type === n2.type && n1.key === n2.key;
+};
