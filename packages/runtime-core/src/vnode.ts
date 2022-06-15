@@ -52,5 +52,9 @@ export function createVnode(
 //根据children[] type创建vnode
 export const normalizeVNode = (child: VNode | string) => {
   //将字符串children转换为vnode
-  return isString(child) ? createVnode(Text, null, child) : child;
+  return isString(child) ? createTextVnode(child) : child;
+};
+
+export const createTextVnode = (text: string | null) => {
+  return createVnode(Text, null, text);
 };

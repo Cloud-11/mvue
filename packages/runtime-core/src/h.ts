@@ -1,5 +1,6 @@
+import { isString } from "./../../shard/src/index";
 import { isArray, isObject, isVNode } from "@mvue/shard/";
-import { createVnode, VNode } from "./vnode";
+import { createTextVnode, createVnode, VNode } from "./vnode";
 
 /*
 // type only
@@ -44,9 +45,15 @@ export function h(type: any, propsOrChildren?: any, children?: any) {
     }
   } else {
     if (l === 3) {
-      if (isVNode(propsOrChildren)) {
+      if (isVNode(children)) {
         //单个vnode包一层数组
         children = [children];
+      } else if (isArray(children)) {
+        for (let i = 0; i < children.length; i++) {
+          if (isString(children[i])) {
+            children[i] = createTextVnode(children[i]);
+          }
+        }
       }
       //其他children原样
     } else if (l > 3) {
