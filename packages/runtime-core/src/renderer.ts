@@ -30,7 +30,7 @@ export interface RendererOptions<HostNode = RendererNode, HostElement = Renderer
   createText(text: string): HostNode;
   createComment(text: string): HostNode;
   setText(node: HostNode, text: string): void;
-  setElementText(node: HostElement, text: string): void;
+  setElementText(node: HostElement, text: string | null): void;
   parentNode(node: HostNode): HostElement | null;
   nextSibling(node: HostNode): HostNode | null;
   querySelector?(selector: string): HostElement | null;
@@ -136,16 +136,20 @@ export const createRenderer = (options: RendererOptions) => {
       }
       //挂载子节点
       else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-        for (let i = 0; i < children.length; i++) {
-          //处理children数组里面包含string文本的情况
-          //createvnode中只处理了children为数组，并没有解开数组
-          let child = normalizeVNode(children[i]);
-          patch(null, child, el);
-        }
+        mountChildren(children as VNode[], el);
       }
     }
     //挂载到container
     hostInsert(el, container);
+  };
+  //挂载更新元素节点
+  const mountChildren = (children: VNode[], el: RendererElement) => {
+    for (let i = 0; i < children.length; i++) {
+      //处理children数组里面包含string文本的情况
+      //createvnode中只处理了children为数组，并没有解开数组
+      let child = normalizeVNode(children[i]);
+      patch(null, child, el);
+    }
   };
   //卸载元素节点
   const unmount = (vnode: VNode) => {
@@ -178,10 +182,83 @@ export const createRenderer = (options: RendererOptions) => {
     }
   };
   //比较children
-  const patchChildren = (n1: VNode, n2: VNode, containernt: RendererElement) => {
+  const patchChildren = (n1: VNode, n2: VNode, el: RendererElement) => {
     const c1 = n1.children;
     const c2 = n2.children;
+    const shapeFlag1 = n1.shapeFlag;
+    const shapeFlag2 = n2.shapeFlag;
     //可能为null,文本，数组
+    // old   new
+    // null  null
+    // null  文本
+    // null  数组
+    //-----以上n1为Null 为新增 不会进入对比----------
+    // 文本  null
+    if (shapeFlag1 & ShapeFlags.TEXT_CHILDREN) {
+      if (c2 == null || shapeFlag2 & ShapeFlags.TEXT_CHILDREN) {
+        hostSetElementText(el, c2 as string);
+      } else if (shapeFlag2 & ShapeFlags.ARRAY_CHILDREN) {
+        //文本+数组
+        hostSetElementText(el, null);
+        mountChildren(c2 as VNode[], el);
+      }
+    } else if (shapeFlag1 & ShapeFlags.ARRAY_CHILDREN) {
+      if (c2 == null || shapeFlag2 & ShapeFlags.TEXT_CHILDREN) {
+        //数组+文本
+        unmountChildren(c1 as VNode[]);
+        if (c1 !== c2) {
+          hostSetElementText(el, c2 as string);
+        }
+      } else if (shapeFlag2 & ShapeFlags.ARRAY_CHILDREN) {
+        //数组+数组
+        // diff()
+        patchKeyedChildren(c1 as VNode[], c2 as VNode[], el);
+      }
+    }
+  };
+  //比较keyedChildren
+
+  const patchKeyedChildren = (c1: VNode[], c2: VNode[], el: RendererElement) => {
+    let e1 = c1.length - 1;
+    let e2 = c2.length - 1;
+    let i = 0;
+    //向后查找
+    //i指针移动到新或旧最后一个元素停止
+    while (i <= e1 && i <= e2) {
+      if (isSameVnode(c1[i], c2[i])) {
+        patch(c1[i], c2[i], el);
+      } else {
+        //遇到不同元素（要新增的）退出
+        break;
+      }
+      i++;
+    }
+    console.log(i, e1, e2);
+    //向前查找
+    //经过前一个查找吗，i指针指向最短的最后元素+1的位置
+    //
+    i = 0;
+    //  0 1 2
+    //0 1 2 3
+    while (i <= e1 && i <= e2) {
+      if (isSameVnode(c1[e1], c2[e2])) {
+        patch(c1[e1], c2[e2], el);
+      } else {
+        //遇到不同元素（要新增的）退出
+        break;
+      }
+      e1--;
+      e2--;
+    }
+    console.log(i, e1, e2);
+  };
+  //卸载循环子节点
+  const unmountChildren = (children: VNode[]) => {
+    for (let i = 0; i < children.length; i++) {
+      if (children[i].shapeFlag & ShapeFlags.ELEMENT) {
+        unmount(children[i]);
+      }
+    }
   };
   return {
     render,

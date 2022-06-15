@@ -33,7 +33,23 @@
       app
     );
     function newdom() {
-      render(h(Text, "123"), app);
+      render(
+        h(
+          "div",
+          {
+            id: "aa",
+            style: {
+              border: "1px solid red",
+              fontSize: "20px",
+            },
+            onClick: () => {
+              console.log(1);
+            },
+          },
+          ["123", h("span", "helldawo world"), "345", "asdasd"]
+        ),
+        app
+      );
     }
   </script>
 </html>
