@@ -60,7 +60,12 @@ export const createRenderer = (options: RendererOptions) => {
     nextSibling: hostNextSibling,
   } = options;
 
-  const patch = (n1: VNode | null, n2: VNode, containernt: RendererElement) => {
+  const patch = (
+    n1: VNode | null,
+    n2: VNode,
+    containernt: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
     if (n1 === n2) return;
     //节点不相同 删除旧的节点
     if (n1 && !isSameVnode(n1, n2)) {
@@ -72,11 +77,11 @@ export const createRenderer = (options: RendererOptions) => {
     //初始渲染
     switch (type) {
       case Text:
-        processText(n1, n2, containernt);
+        processText(n1, n2, containernt, anchor);
         break;
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
-          processElement(n1, n2, containernt);
+          processElement(n1, n2, containernt, anchor);
         }
         break;
     }
@@ -94,10 +99,15 @@ export const createRenderer = (options: RendererOptions) => {
   };
 
   //处理文本节点
-  const processText = (n1: VNode | null, n2: VNode, containernt: RendererElement) => {
+  const processText = (
+    n1: VNode | null,
+    n2: VNode,
+    containernt: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
     if (n1 === null) {
       n2.el = hostCreateText(n2.children as string);
-      hostInsert(n2.el as RendererElement, containernt);
+      hostInsert(n2.el as RendererElement, containernt, anchor);
     } else {
       //更新
       //文本节点相同 复用节点 设置文本
@@ -108,9 +118,14 @@ export const createRenderer = (options: RendererOptions) => {
     }
   };
   //处理元素节点
-  const processElement = (n1: VNode | null, n2: VNode, containernt: RendererElement) => {
+  const processElement = (
+    n1: VNode | null,
+    n2: VNode,
+    containernt: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
     if (n1 === null) {
-      mountElement(n2, containernt);
+      mountElement(n2, containernt, anchor);
     } else {
       //更新
       patchElement(n1, n2, containernt);
@@ -118,7 +133,11 @@ export const createRenderer = (options: RendererOptions) => {
   };
 
   //挂载创建元素节点
-  const mountElement = (vnode: VNode, container: RendererElement) => {
+  const mountElement = (
+    vnode: VNode,
+    container: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
     let { type, el, props, children, shapeFlag } = vnode;
     //创建节点
     el = vnode.el = hostCreateElement(type as string);
@@ -140,7 +159,7 @@ export const createRenderer = (options: RendererOptions) => {
       }
     }
     //挂载到container
-    hostInsert(el, container);
+    hostInsert(el, container, anchor);
   };
   //挂载更新元素节点
   const mountChildren = (children: VNode[], el: RendererElement) => {
@@ -237,7 +256,7 @@ export const createRenderer = (options: RendererOptions) => {
     //向前查找
     //经过前一个查找吗，i指针指向最短的最后元素+1的位置
     //
-    i = 0;
+    // i = 0;
     //  0 1 2
     //0 1 2 3
     while (i <= e1 && i <= e2) {
@@ -250,7 +269,37 @@ export const createRenderer = (options: RendererOptions) => {
       e1--;
       e2--;
     }
+    //i=3 e1=2 e2=3 这种情况是全部走完了向后查找 i永远大于e1 向前查找进不去。
+    //   0 1 2
+    // 0 1 2 3
+    //i=1 e1=2 e2=3
+    //这种情况是走了i次向后查找，到处跳出，此时i<e1.再进入向前查找。e1、e2--到i的位置。
+    //对向后查找进行补充，不会重复指向
+    //最后，即使向前查找也跳出，
+    //  a c d
+    //a b e d
     console.log(i, e1, e2);
+    //有key同序列新增
+    //i>e1 有新增元素
+    if (i > e1) {
+      // debugger;
+      //新增元素
+      while (i <= e2) {
+        const anchor = e2 + 1 > c2.length ? c2[e2 + 1].el : null;
+        patch(null, c2[i], el, anchor);
+        i++;
+      }
+    }
+    //有key同序列删除
+    if (i > e2) {
+      //删除元素
+      while (i <= e1) {
+        unmount(c1[i]);
+        i++;
+      }
+    }
+
+    //乱序比对
   };
   //卸载循环子节点
   const unmountChildren = (children: VNode[]) => {

@@ -28,7 +28,7 @@
             console.log(1);
           },
         },
-        ["asd", h("span", "hello world"), "123"]
+        ["asd", h("span", { key: "1" }, "hello world"), "123"]
       ),
       app
     );
@@ -46,7 +46,7 @@
               console.log(1);
             },
           },
-          ["123", h("span", "helldawo world"), "345", "asdasd"]
+          [h("span", { key: "2" }, "hello"), "123", h("span", { key: "1" }, " world"), "345"]
         ),
         app
       );

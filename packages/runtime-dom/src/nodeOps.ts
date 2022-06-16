@@ -1,5 +1,5 @@
 export interface NodeOps {
-  insert(parent: Element, child: Element, anchor?: Element): void;
+  insert(parent: Element, child: Element, anchor: Element | null): void;
   remove(child: Element): void;
   createElement(tagName: string): Element;
   createText(text: string): Text;
@@ -25,7 +25,7 @@ export const nodeOps: NodeOps = {
     return document.createComment(text);
   },
   //插入节点
-  insert: (child, parent, anchor) => {
+  insert: (child, parent, anchor = null) => {
     if (anchor != null) {
       parent.insertBefore(child, anchor);
     } else {
