@@ -291,7 +291,7 @@ export const createRenderer = (options: RendererOptions) => {
       }
     }
     //有key同序列删除
-    if (i > e2) {
+    else if (i > e2) {
       //删除元素
       while (i <= e1) {
         unmount(c1[i]);
@@ -300,6 +300,110 @@ export const createRenderer = (options: RendererOptions) => {
     }
 
     //乱序比对
+    // a b [c d e] f g
+    // a b [e c d h] f g
+    //新增元素 查找新元素有，老元素没有
+    type key = string | number | symbol;
+    const newVNodeMap = new Map<key, number>();
+
+    //存储i值
+    const s1 = i;
+    const s2 = i;
+    //新的元素区域数量 新元素需要比较的长度
+    let toBePatched = e2 - s2 + 1;
+    //新的元素排列顺序对应的老的元素下标  [d=3 c=2 e=4 h=0]
+    const newIndexToOldIndexMap = new Array(toBePatched);
+    for (let i = 0; i < newIndexToOldIndexMap.length; i++) {
+      newIndexToOldIndexMap[i] = 0;
+    }
+
+    //遍历中间区域新元素 存储key和index
+    for (i = s2; i <= e2; i++) {
+      c2[i]?.key && newVNodeMap.set(c2[i].key as key, i);
+    }
+
+    //遍历中间区域老元素
+    for (i = s1; i <= e1; i++) {
+      const oldVNode = c1[i];
+      const newIndex = newVNodeMap.get(oldVNode.key as key);
+      //老元素没在新的里面，要卸载
+      if (newIndex === undefined) {
+        unmount(oldVNode);
+      } else {
+        //存在的，有些需要移动 需要找出最少移动次数  移动实际是卸载重建
+        //移动需要判断位置 位置= index
+        // a b [c d e ss] f g
+        // a b [e c d h] f g    4 2 3 0
+        //标记老的index
+        newIndexToOldIndexMap[newIndex - s2] = i;
+        //
+        patch(oldVNode, c2[newIndex], el);
+      }
+
+      //其他的要新增
+    }
+    //最小递增子序列
+    const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap) || [];
+    let j = increasingNewIndexSequence.length - 1;
+
+    for (let i = toBePatched - 1; i >= 0; i--) {
+      const newIndex = i + s2;
+      const newChild = c2[newIndex];
+      const anchor = newIndex + 1 < c2.length ? c2[newIndex + 1].el : null;
+      if (newIndexToOldIndexMap[i] === 0) {
+        mountElement(newChild, el, anchor);
+      } else {
+        //老元素和新元素位置不同，需要移动
+        //有些虽然位置不同但是元素是相同的，减少因位置不同的移动次数
+        //最小递增子序列
+        if (j < 0 || i !== increasingNewIndexSequence[j]) {
+          hostInsert(newChild.el as VNode, el, anchor);
+        } else {
+          j--;
+        }
+      }
+    }
+  };
+  //最小递增子序列
+  const getSequence = (arr: number[]) => {
+    const p = arr.slice();
+    const result = [0];
+    let i, j, u, v, c;
+    const len = arr.length;
+    for (i = 0; i < len; i++) {
+      const arrI = arr[i];
+      if (arrI !== 0) {
+        j = result[result.length - 1];
+        if (arr[j] < arrI) {
+          p[i] = j;
+          result.push(i);
+          continue;
+        }
+        u = 0;
+        v = result.length - 1;
+        while (u < v) {
+          c = (u + v) >> 1;
+          if (arr[result[c]] < arrI) {
+            u = c + 1;
+          } else {
+            v = c;
+          }
+        }
+        if (arrI < arr[result[u]]) {
+          if (u > 0) {
+            p[i] = result[u - 1];
+          }
+          result[u] = i;
+        }
+      }
+    }
+    u = result.length;
+    v = result[u - 1];
+    while (u-- > 0) {
+      result[u] = v;
+      v = p[v];
+    }
+    return result;
   };
   //卸载循环子节点
   const unmountChildren = (children: VNode[]) => {

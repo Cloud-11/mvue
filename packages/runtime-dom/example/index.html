@@ -17,7 +17,7 @@
 
     render(
       h(
-        "div",
+        "ul",
         {
           id: "aa",
           style: {
@@ -28,14 +28,23 @@
             console.log(1);
           },
         },
-        ["asd", h("span", { key: "1" }, "hello world"), "123"]
+        [
+          h("li", { key: "a" }, "a"),
+          h("li", { key: "b" }, "b"),
+          h("li", { key: "c" }, "c"),
+          h("li", { key: "d" }, "d"),
+          h("li", { key: "e" }, "e"),
+          h("li", { key: "ff" }, "fff"),
+          h("li", { key: "f" }, "f"),
+          h("li", { key: "g" }, "g"),
+        ]
       ),
       app
     );
     function newdom() {
       render(
         h(
-          "div",
+          "ul",
           {
             id: "aa",
             style: {
@@ -46,7 +55,16 @@
               console.log(1);
             },
           },
-          [h("span", { key: "2" }, "hello"), "123", h("span", { key: "1" }, " world"), "345"]
+          [
+            h("li", { key: "a" }, "a"),
+            h("li", { key: "b" }, "b"),
+            h("li", { key: "e" }, "e"),
+            h("li", { key: "c" }, "c"),
+            h("li", { key: "d" }, "d"),
+            h("li", { key: "h" }, "h"),
+            h("li", { key: "f" }, "f"),
+            h("li", { key: "g" }, "g"),
+          ]
         ),
         app
       );
