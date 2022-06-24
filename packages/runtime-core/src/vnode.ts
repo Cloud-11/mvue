@@ -2,6 +2,8 @@ import { isArray } from "@mvue/shard/";
 import { isString, ShapeFlags } from "@mvue/shard";
 //文本节点vnode类型
 export const Text = Symbol("Text");
+//空节点类型
+export const Fragment = Symbol("Fragment");
 export interface Component {}
 export interface RendererNode {
   [key: string]: any;

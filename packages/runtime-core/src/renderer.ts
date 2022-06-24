@@ -1,5 +1,5 @@
 import { isSameVnode, ShapeFlags } from "@mvue/shard";
-import { normalizeVNode, VNode, Text } from "./vnode";
+import { normalizeVNode, VNode, Text, Fragment } from "./vnode";
 
 export interface RendererNode {
   [key: string]: any;
@@ -79,6 +79,9 @@ export const createRenderer = (options: RendererOptions) => {
       case Text:
         processText(n1, n2, containernt, anchor);
         break;
+      case Fragment:
+        processFragment(n1, n2, containernt);
+        break;
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(n1, n2, containernt, anchor);
@@ -87,6 +90,10 @@ export const createRenderer = (options: RendererOptions) => {
     }
   };
   const render = (vnode: VNode, container: RendererElement) => {
+    if (!container) {
+      console.error("ERROR:container dont undefind!");
+      return;
+    }
     if (!vnode) {
       //无node,卸载组件
       if (container._vnode) {
@@ -117,18 +124,26 @@ export const createRenderer = (options: RendererOptions) => {
       }
     }
   };
+  //处理空节点
+  const processFragment = (n1: VNode | null, n2: VNode, container: RendererElement) => {
+    if (n1 == null) {
+      mountChildren(n2?.children as VNode[], container);
+    } else {
+      patchChildren(n1, n2, container);
+    }
+  };
   //处理元素节点
   const processElement = (
     n1: VNode | null,
     n2: VNode,
-    containernt: RendererElement,
+    container: RendererElement,
     anchor: RendererElement | null = null
   ) => {
     if (n1 === null) {
-      mountElement(n2, containernt, anchor);
+      mountElement(n2, container, anchor);
     } else {
       //更新
-      patchElement(n1, n2, containernt);
+      patchElement(n1, n2);
     }
   };
 
@@ -175,7 +190,7 @@ export const createRenderer = (options: RendererOptions) => {
     hostRemove(vnode.el as RendererElement);
   };
   //更新元素节点
-  const patchElement = (n1: VNode, n2: VNode, containernt: RendererElement) => {
+  const patchElement = (n1: VNode, n2: VNode) => {
     //复用节点
     let el = (n2.el = n1.el);
     //对比属性
@@ -312,10 +327,7 @@ export const createRenderer = (options: RendererOptions) => {
     //新的元素区域数量 新元素需要比较的长度
     let toBePatched = e2 - s2 + 1;
     //新的元素排列顺序对应的老的元素下标  [d=3 c=2 e=4 h=0]
-    const newIndexToOldIndexMap = new Array(toBePatched);
-    for (let i = 0; i < newIndexToOldIndexMap.length; i++) {
-      newIndexToOldIndexMap[i] = 0;
-    }
+    const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
 
     //遍历中间区域新元素 存储key和index
     for (i = s2; i <= e2; i++) {
@@ -330,13 +342,10 @@ export const createRenderer = (options: RendererOptions) => {
       if (newIndex === undefined) {
         unmount(oldVNode);
       } else {
-        //存在的，有些需要移动 需要找出最少移动次数  移动实际是卸载重建
-        //移动需要判断位置 位置= index
-        // a b [c d e ss] f g
-        // a b [e c d h] f g    4 2 3 0
         //标记老的index
-        newIndexToOldIndexMap[newIndex - s2] = i;
-        //
+        newIndexToOldIndexMap[newIndex - s2] = i + 1;
+        //在c2中找到c1的老元素(key相同type相同)  继续比对属性和儿子
+        //说明
         patch(oldVNode, c2[newIndex], el);
       }
 
@@ -353,6 +362,10 @@ export const createRenderer = (options: RendererOptions) => {
       if (newIndexToOldIndexMap[i] === 0) {
         mountElement(newChild, el, anchor);
       } else {
+        //存在的，有些需要移动 需要找出最少移动次数
+        //移动需要判断位置 位置= index
+        // a b [c d e ss] f g
+        // a b [e c d h] f g    4 2 3 0
         //老元素和新元素位置不同，需要移动
         //有些虽然位置不同但是元素是相同的，减少因位置不同的移动次数
         //最小递增子序列
@@ -366,42 +379,39 @@ export const createRenderer = (options: RendererOptions) => {
   };
   //最小递增子序列
   const getSequence = (arr: number[]) => {
-    const p = arr.slice();
-    const result = [0];
-    let i, j, u, v, c;
-    const len = arr.length;
-    for (i = 0; i < len; i++) {
-      const arrI = arr[i];
-      if (arrI !== 0) {
-        j = result[result.length - 1];
-        if (arr[j] < arrI) {
-          p[i] = j;
-          result.push(i);
-          continue;
-        }
-        u = 0;
-        v = result.length - 1;
-        while (u < v) {
-          c = (u + v) >> 1;
-          if (arr[result[c]] < arrI) {
-            u = c + 1;
-          } else {
-            v = c;
-          }
-        }
-        if (arrI < arr[result[u]]) {
-          if (u > 0) {
-            p[i] = result[u - 1];
-          }
-          result[u] = i;
+    //1.贪心算法  不停向后查找递增的  比前面小的要替换掉
+    //[4, 2, 3, -1]
+    let result = [0]; //保存arr索引
+    let p = new Array(arr.length).fill(undefined); //保存前面的索引
+    for (let i = 1; i < arr.length; i++) {
+      //判断值的大小 取索引数组result的最后一个值(索引)对应arr的值
+      if (arr[i] > arr[result[result.length - 1]]) {
+        p[i] = result[result.length - 1];
+        result.push(i);
+        continue;
+      }
+      //2.替换掉比前面小的 使用二分查找
+      //比前面小的要替换掉
+      let start = 0;
+      let end = result.length - 1;
+      while (start < end) {
+        const mid = ((start + end) / 2) | 0;
+        if (arr[i] > arr[result[mid]]) {
+          start = mid + 1;
+        } else {
+          end = mid;
         }
       }
+      //3.得到序列的值是递增的  但是位置(index索引)没有检验
+      if (arr[i] < arr[result[start]]) {
+        result[start] = i;
+      }
     }
-    u = result.length;
-    v = result[u - 1];
-    while (u-- > 0) {
-      result[u] = v;
-      v = p[v];
+    //5.检验位置是否递增 将不合法的替换操作还原
+    let i = result.length - 1;
+    while (i >= 0) {
+      result[i - 1] = p[result[i]];
+      i--;
     }
     return result;
   };

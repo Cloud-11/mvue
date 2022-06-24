@@ -12,62 +12,64 @@
   </body>
   <script src="../dist/runtime-dom.global.js"></script>
   <script>
-    const { h, createRenderer, render, Text } = MvueRuntimeDom;
+    const { h, createRenderer, render, Text, Fragment } = MvueRuntimeDom;
     const app = document.querySelector("#app");
 
-    render(
-      h(
-        "ul",
-        {
-          id: "aa",
-          style: {
-            border: "1px solid red",
-            fontSize: "20px",
-          },
-          onClick: () => {
-            console.log(1);
-          },
-        },
-        [
-          h("li", { key: "a" }, "a"),
-          h("li", { key: "b" }, "b"),
-          h("li", { key: "c" }, "c"),
-          h("li", { key: "d" }, "d"),
-          h("li", { key: "e" }, "e"),
-          h("li", { key: "ff" }, "fff"),
-          h("li", { key: "f" }, "f"),
-          h("li", { key: "g" }, "g"),
-        ]
-      ),
-      app
-    );
+    render(h(Fragment, [h("h3", "123"), h("h3", "456")]), app);
+    // render(
+    //   h(
+    //     "ul",
+    //     {
+    //       id: "aa",
+    //       style: {
+    //         border: "1px solid red",
+    //         fontSize: "20px",
+    //       },
+    //       onClick: () => {
+    //         console.log(1);
+    //       },
+    //     },
+    //     [
+    //       h("li", { key: "a" }, "a"),
+    //       h("li", { key: "b" }, "b"),
+    //       h("li", { key: "c" }, "c"),
+    //       h("li", { key: "d" }, "d"),
+    //       h("li", { key: "e" }, "e"),
+    //       h("li", { key: "ff" }, "fff"),
+    //       h("li", { key: "f" }, "f"),
+    //       h("li", { key: "g" }, "g"),
+    //     ]
+    //   ),
+    //   app
+    // );
     function newdom() {
-      render(
-        h(
-          "ul",
-          {
-            id: "aa",
-            style: {
-              border: "1px solid red",
-              fontSize: "20px",
-            },
-            onClick: () => {
-              console.log(1);
-            },
-          },
-          [
-            h("li", { key: "a" }, "a"),
-            h("li", { key: "b" }, "b"),
-            h("li", { key: "e" }, "e"),
-            h("li", { key: "c" }, "c"),
-            h("li", { key: "d" }, "d"),
-            h("li", { key: "h" }, "h"),
-            h("li", { key: "f" }, "f"),
-            h("li", { key: "g" }, "g"),
-          ]
-        ),
-        app
-      );
+      // render(
+      //   h(
+      //     "ul",
+      //     {
+      //       id: "aa",
+      //       style: {
+      //         border: "1px solid red",
+      //         fontSize: "20px",
+      //       },
+      //       onClick: () => {
+      //         console.log(1);
+      //       },
+      //     },
+      //     [
+      //       h("li", { key: "a" }, "a"),
+      //       h("li", { key: "b" }, "b"),
+      //       h("li", { key: "e" }, "e"),
+      //       h("li", { key: "c" }, "c"),
+      //       h("li", { key: "d" }, "d"),
+      //       h("li", { key: "h" }, "h"),
+      //       h("li", { key: "f" }, "f"),
+      //       h("li", { key: "g" }, "g"),
+      //     ]
+      //   ),
+      //   app
+      // );
+      render(h(Fragment, [h("h3", "asd"), h("h3", "45asdasdasd6")]), app);
     }
   </script>
 </html>
