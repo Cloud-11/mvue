@@ -1,9 +1,9 @@
 //effect函数
-export let activeEffect: ReactEffect | null = null;
-export class ReactEffect {
+export let activeEffect: ReactiveEffect | null = null;
+export class ReactiveEffect {
   public active = true;
-  public parent: ReactEffect | null = null;
-  public deps: Set<ReactEffect>[] = [];
+  public parent: ReactiveEffect | null = null;
+  public deps: Set<ReactiveEffect>[] = [];
   constructor(public fn: () => void, public scheduler: any) {}
   run() {
     try {
@@ -33,11 +33,11 @@ export class ReactEffect {
 
 export interface ReactiveEffectRunner<T = any> {
   (): T;
-  effect: ReactEffect;
+  effect: ReactiveEffect;
 }
 //effect函数
 export function effect(fn: () => void, options: any) {
-  const _effect = new ReactEffect(fn, options?.scheduler);
+  const _effect = new ReactiveEffect(fn, options?.scheduler);
   //初始执行一次
   _effect.run();
   //返回一个run函数
@@ -49,7 +49,7 @@ export function effect(fn: () => void, options: any) {
 }
 
 //清除关联依赖
-const clearDeps = (effect: ReactEffect) => {
+const clearDeps = (effect: ReactiveEffect) => {
   //循环每一个属性的set,在set里将自己删除
   effect.deps.forEach((depSet) => {
     depSet.delete(effect);
@@ -57,7 +57,7 @@ const clearDeps = (effect: ReactEffect) => {
 };
 
 //收集属性和effect
-const targetMap = new WeakMap<any, Map<string | symbol, Set<ReactEffect>>>();
+const targetMap = new WeakMap<any, Map<string | symbol, Set<ReactiveEffect>>>();
 export const track = (target: any, type: string, key: string | symbol) => {
   //有effect才收集
   if (!activeEffect) return;
@@ -74,7 +74,7 @@ export const track = (target: any, type: string, key: string | symbol) => {
   //添加activeEffect
   trackEffect(depSet);
 };
-export const trackEffect = (depSet: Set<ReactEffect>) => {
+export const trackEffect = (depSet: Set<ReactiveEffect>) => {
   //添加activeEffect
   if (activeEffect && !depSet.has(activeEffect)) {
     depSet.add(activeEffect);
@@ -92,7 +92,7 @@ export const trigger = (
 ) => {
   triggerEffect(targetMap.get(target)?.get(key));
 };
-export const triggerEffect = (effects: Set<ReactEffect> | undefined) => {
+export const triggerEffect = (effects: Set<ReactiveEffect> | undefined) => {
   //拷贝一份来执行,否则死循环！！？？
   effects = new Set(effects);
   effects?.forEach((effect) => {

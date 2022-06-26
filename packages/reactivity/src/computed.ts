@@ -1,5 +1,5 @@
 import { isFunction } from "@mvue/shard/";
-import { ReactEffect, trackEffect, triggerEffect } from "./effect";
+import { ReactiveEffect, trackEffect, triggerEffect } from "./effect";
 
 class ComputedRefImpl {
   public effect;
@@ -9,11 +9,11 @@ class ComputedRefImpl {
   public __v_isRef = true;
   //返回的组合值
   public _value: any;
-  public dep: Set<ReactEffect> = new Set();
+  public dep: Set<ReactiveEffect> = new Set();
   constructor(getter: () => any, public setter: (params?: any) => void) {
     //effect.run()时 activeEffect=this.effect
     //所以这里不会收集到effect依赖
-    this.effect = new ReactEffect(getter, () => {
+    this.effect = new ReactiveEffect(getter, () => {
       if (!this._dirty) {
         this._dirty = true;
         //此处搭建属性-->依赖属性的计算属性的effect(this.effect)-->依赖计算属性的effect的关联

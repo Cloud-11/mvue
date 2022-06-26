@@ -1,5 +1,5 @@
 import { isFunction, isObject, isReactive } from "@mvue/shard";
-import { ReactEffect } from "./effect";
+import { ReactiveEffect } from "./effect";
 
 //循环对象，考虑对象里循环引用问题，
 const traversal = (val: any, set = new Set()) => {
@@ -51,7 +51,7 @@ export const watch = (
     oldVal = newVal;
   };
 
-  const effect = new ReactEffect(<() => any>getter, cb);
+  const effect = new ReactiveEffect(<() => any>getter, cb);
 
   //执行getter  触发收集
   oldVal = effect.run();
