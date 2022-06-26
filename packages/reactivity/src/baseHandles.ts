@@ -16,8 +16,6 @@ const isNonTrackableKeys = makeMap(`__proto__,__v_isRef,__isVue`);
 
 //获取symbol属性
 const a = Object.getOwnPropertyNames(Symbol);
-console.log(isSymbol);
-console.log(a.map((key) => (Symbol as any)[key]).filter(isSymbol));
 
 const builtInSymbols = new Set(
   Object.getOwnPropertyNames(Symbol)

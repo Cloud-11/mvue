@@ -14,8 +14,24 @@
   <script>
     const { h, createRenderer, render, Text, Fragment } = MvueRuntimeDom;
     const app = document.querySelector("#app");
+    const component = {
+      data() {
+        return { text: "hello world" };
+      },
+      render() {
+        // setTimeout(() => {
+        //   this.text += "1";
+        //   this.text += "2";
+        // }, 1000);
+        return h("div", h("span", `${this.text}`));
+      },
+    };
+    render(h(component), app);
+    function newdom() {
+      component.data().text = "hello mvue";
+    }
 
-    render(h(Fragment, [h("h3", "123"), h("h3", "456")]), app);
+    // render(h(Fragment, [h("h3", "123"), h("h3", "456")]), app);
     // render(
     //   h(
     //     "ul",
@@ -42,34 +58,34 @@
     //   ),
     //   app
     // );
-    function newdom() {
-      // render(
-      //   h(
-      //     "ul",
-      //     {
-      //       id: "aa",
-      //       style: {
-      //         border: "1px solid red",
-      //         fontSize: "20px",
-      //       },
-      //       onClick: () => {
-      //         console.log(1);
-      //       },
-      //     },
-      //     [
-      //       h("li", { key: "a" }, "a"),
-      //       h("li", { key: "b" }, "b"),
-      //       h("li", { key: "e" }, "e"),
-      //       h("li", { key: "c" }, "c"),
-      //       h("li", { key: "d" }, "d"),
-      //       h("li", { key: "h" }, "h"),
-      //       h("li", { key: "f" }, "f"),
-      //       h("li", { key: "g" }, "g"),
-      //     ]
-      //   ),
-      //   app
-      // );
-      render(h(Fragment, [h("h3", "asd"), h("h3", "45asdasdasd6")]), app);
-    }
+    // function newdom() {
+    // render(
+    //   h(
+    //     "ul",
+    //     {
+    //       id: "aa",
+    //       style: {
+    //         border: "1px solid red",
+    //         fontSize: "20px",
+    //       },
+    //       onClick: () => {
+    //         console.log(1);
+    //       },
+    //     },
+    //     [
+    //       h("li", { key: "a" }, "a"),
+    //       h("li", { key: "b" }, "b"),
+    //       h("li", { key: "e" }, "e"),
+    //       h("li", { key: "c" }, "c"),
+    //       h("li", { key: "d" }, "d"),
+    //       h("li", { key: "h" }, "h"),
+    //       h("li", { key: "f" }, "f"),
+    //       h("li", { key: "g" }, "g"),
+    //     ]
+    //   ),
+    //   app
+    // );
+    // render(h(Fragment, [h("h3", "asd"), h("h3", "45asdasdasd6")]), app);
+    // }
   </script>
 </html>

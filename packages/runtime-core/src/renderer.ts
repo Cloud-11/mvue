@@ -1,11 +1,16 @@
+import { reactive, ReactiveEffect } from "@mvue/reactivity";
 import { isSameVnode, ShapeFlags } from "@mvue/shard";
-import { normalizeVNode, VNode, Text, Fragment } from "./vnode";
-
-export interface RendererNode {
-  [key: string]: any;
-}
-
-export interface RendererElement extends RendererNode {}
+import { queueJob } from "./scheduler";
+import {
+  normalizeVNode,
+  VNode,
+  Text,
+  Fragment,
+  Component,
+  ComponentInstance,
+  RendererNode,
+  RendererElement,
+} from "./vnode";
 
 export interface RendererOptions<HostNode = RendererNode, HostElement = RendererElement> {
   patchProp(
@@ -85,6 +90,8 @@ export const createRenderer = (options: RendererOptions) => {
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(n1, n2, containernt, anchor);
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          processComponent(n1, n2, containernt, anchor);
         }
         break;
     }
@@ -132,6 +139,57 @@ export const createRenderer = (options: RendererOptions) => {
       patchChildren(n1, n2, container);
     }
   };
+  //处理组件节点
+  const processComponent = (
+    n1: VNode | null,
+    n2: VNode,
+    container: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
+    if (n1 === null) {
+      mountComponent(n2, container, anchor);
+    } else {
+      patchComponent(n1, n2, container);
+    }
+  };
+  //挂载组件
+  const mountComponent = (
+    vnode: VNode,
+    container: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
+    let { data = () => ({}), render } = vnode.type as Component;
+    const state = reactive(data());
+    const instance: ComponentInstance = {
+      state,
+      vnode,
+      subTree: null,
+      mounted: false,
+      update: () => {},
+    };
+    vnode.component = instance;
+    const componentUpdateFn = () => {
+      console.log(instance.mounted);
+      if (!instance.mounted) {
+        //初始化 未挂载
+        instance.subTree = render.call(state) as VNode;
+        patch(null, instance.subTree, container, anchor);
+        instance.mounted = true;
+      } else {
+        //更新
+        const subTree = render.call(state) as VNode;
+        patch(instance.subTree, subTree, container, anchor);
+        instance.subTree = subTree;
+      }
+    };
+    const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
+    //强制更新函数
+    instance.update = effect.run.bind(effect); //this指向effect
+
+    effect.run();
+  };
+  //更新组件
+  const patchComponent = (n1: VNode | null, n2: VNode, container: RendererElement) => {};
   //处理元素节点
   const processElement = (
     n1: VNode | null,
@@ -267,7 +325,6 @@ export const createRenderer = (options: RendererOptions) => {
       }
       i++;
     }
-    console.log(i, e1, e2);
     //向前查找
     //经过前一个查找吗，i指针指向最短的最后元素+1的位置
     //
@@ -293,7 +350,6 @@ export const createRenderer = (options: RendererOptions) => {
     //最后，即使向前查找也跳出，
     //  a c d
     //a b e d
-    console.log(i, e1, e2);
     //有key同序列新增
     //i>e1 有新增元素
     if (i > e1) {

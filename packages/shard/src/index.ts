@@ -37,7 +37,7 @@ export const isPromise = <T = any>(val: unknown): val is Promise<T> => {
   return isObject(val) && isFunction(val.then) && isFunction(val.catch);
 };
 
-export const isVNode = (val: unknown): boolean => !!(val as any)?.["__v_VNode"];
+export const isVNode = (val: unknown): boolean => !!(val as any)?.["__v_isVNode"];
 
 export const isSameVnode = (n1: VNode, n2: VNode): boolean => {
   return n1.type === n2.type && n1.key === n2.key;

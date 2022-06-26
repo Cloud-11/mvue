@@ -1,33 +1,43 @@
 import { isArray } from "@mvue/shard/";
 import { isString, ShapeFlags } from "@mvue/shard";
+
 //文本节点vnode类型
 export const Text = Symbol("Text");
 //空节点类型
 export const Fragment = Symbol("Fragment");
-export interface Component {}
+
 export interface RendererNode {
   [key: string]: any;
 }
-
 export interface RendererElement extends RendererNode {}
 
+export interface Component extends RendererNode {}
+
+export interface ComponentInstance extends RendererNode {
+  state: any;
+  subTree: VNode | null;
+  mounted: boolean;
+  vnode: Component;
+  update: () => void;
+}
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
   ExtraProps = { [key: string]: any }
 > {
   __v_isVNode: boolean;
-  type: string | Component;
+  type: string | symbol | Component;
   props: ExtraProps | null;
   key: string | number | symbol | null;
   el: HostNode | null;
   children: VNode[] | string | null;
   shapeFlag: ShapeFlags;
+  component: Component | null;
 }
 //创建虚拟节点
 //组件，元素，文本
 export function createVnode(
-  type: string | symbol,
+  type: string | symbol | Component,
   props: any,
   children: VNode[] | string | null = null
 ): VNode {
@@ -43,6 +53,7 @@ export function createVnode(
     el: null,
     children,
     shapeFlag,
+    component: null,
   };
   if (children) {
     //包含子节点 | 或运算符

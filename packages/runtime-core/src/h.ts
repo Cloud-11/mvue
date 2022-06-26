@@ -30,7 +30,6 @@ export function h(type: any, propsOrChildren?: any, children?: any) {
     // h('div', 'foo') // text
     // h('div', h('br')) // vnode
     // h(Component, () => {}) // default slot
-
     //第2个参数可能 1. props 2. children
     if (isObject(propsOrChildren) && !isArray(propsOrChildren)) {
       if (isVNode(propsOrChildren)) {
