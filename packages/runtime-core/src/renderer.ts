@@ -1,5 +1,6 @@
 import { reactive, ReactiveEffect } from "@mvue/reactivity";
-import { isSameVnode, ShapeFlags } from "@mvue/shard";
+import { isSameVnode, ShapeFlags, hasOwn, iteratorAny } from "@mvue/shard";
+import { initProps } from "./componentProps";
 import { queueJob } from "./scheduler";
 import {
   normalizeVNode,
@@ -152,32 +153,69 @@ export const createRenderer = (options: RendererOptions) => {
       patchComponent(n1, n2, container);
     }
   };
+
+  //组件上下文对外暴露属性
+  const instancePropsMap: iteratorAny = {
+    $attrs: (i: ComponentInstance) => i.attrs,
+  };
   //挂载组件
   const mountComponent = (
     vnode: VNode,
     container: RendererElement,
     anchor: RendererElement | null = null
   ) => {
-    let { data = () => ({}), render } = vnode.type as Component;
+    let { data = () => ({}), render, props: propsOptions } = vnode.type as Component;
     const state = reactive(data());
     const instance: ComponentInstance = {
       state,
       vnode,
       subTree: null,
       mounted: false,
+      props: {},
+      attrs: {},
+      //组件内定义的传进来的props只有key
+      propsOptions,
       update: () => {},
+      proxy: null,
     };
     vnode.component = instance;
+    //初始化props
+    initProps(instance, vnode.props);
+    //设置渲染上下文 proxy
+    instance.proxy = new Proxy(instance, {
+      get(target, key) {
+        const { state, props } = target;
+        if (state?.[key]) {
+          return state[key];
+        } else if (props?.[key]) {
+          return props[key];
+        }
+        const getter = instancePropsMap[key];
+        if (getter) {
+          return getter(target);
+        }
+      },
+      set(target, key, value) {
+        const { state, props } = target;
+        if (state?.[key]) {
+          state[key] = value;
+          return true;
+        } else if (props?.[key]) {
+          console.warn(`attempting to mutate prop key:${String(key)}`);
+          return false;
+        }
+        return true;
+      },
+    });
     const componentUpdateFn = () => {
-      console.log(instance.mounted);
       if (!instance.mounted) {
         //初始化 未挂载
-        instance.subTree = render.call(state) as VNode;
+        instance.subTree = render.call(instance.proxy) as VNode;
         patch(null, instance.subTree, container, anchor);
         instance.mounted = true;
       } else {
         //更新
-        const subTree = render.call(state) as VNode;
+        const subTree = render.call(instance.proxy) as VNode;
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
       }

@@ -18,15 +18,19 @@
       data() {
         return { text: "hello world" };
       },
+      props: {
+        a: String,
+        aa: Object,
+      },
       render() {
-        // setTimeout(() => {
-        //   this.text += "1";
-        //   this.text += "2";
-        // }, 1000);
-        return h("div", h("span", `${this.text}`));
+        setTimeout(() => {
+          this.aa.a = "123";
+        }, 1000);
+        return h("div", h("span", `${this.text}--${this.aa.a}-- ${this.$attrs.b}`));
       },
     };
-    render(h(component), app);
+    //
+    render(h(component, { a: 1, aa: { bb: 1, cc: { m: 1 } }, b: 2 }), app);
     function newdom() {
       component.data().text = "hello mvue";
     }
