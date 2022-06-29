@@ -1,11 +1,11 @@
 import { isObject, isProxy, isReactive, isReadonly, ReactiveFlags } from "@mvue/shard";
-import { mutableHandles, readonlyHandlers } from "./baseHandles";
+import { mutableHandles, readonlyHandlers, shallowHandlers } from "./baseHandles";
 
 export interface Target {
   [ReactiveFlags.SKIP]?: boolean;
   [ReactiveFlags.IS_REACTIVE]?: boolean;
   [ReactiveFlags.IS_READONLY]?: boolean;
-  // [ReactiveFlags.IS_SHALLOW]?: boolean
+  [ReactiveFlags.IS_SHALLOW]?: boolean;
   [ReactiveFlags.IS_REF]?: any;
   [ReactiveFlags.RAW]?: any;
 }
@@ -14,7 +14,7 @@ export interface Target {
 //防止同一对象代理多次
 //WeakMap key只能是对象，弱引用
 const reactiveMap = new WeakMap();
-
+const shallowReactiveMap = new WeakMap();
 const createProxy = (
   target: any,
   handles: ProxyHandler<any>,
@@ -60,6 +60,10 @@ export function reactive(target: any) {
 export function readonly(raw: any) {
   return createProxy(raw, readonlyHandlers, true);
 }
+export function shallowReactive(target: any) {
+  return createProxy(target, shallowHandlers, false, shallowReactiveMap);
+}
+
 //获取原始对象
 export function toRaw<T extends Target>(target: T): T {
   const raw = target[ReactiveFlags.RAW];

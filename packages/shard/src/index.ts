@@ -4,11 +4,10 @@ import { ReactiveFlags } from "./reactiveFlags";
 export * from "./reactiveFlags";
 export * from "./shapeFlags";
 
-/**
- * isObject
- * @param obj
- * @returns
- */
+//type
+export type iteratorAny<K extends string | number | symbol = string | number | symbol, T = any> = {
+  [key in K]: T;
+};
 export const isArray = Array.isArray;
 
 export const isRef = (val: unknown): boolean => !!(val as Target)?.[ReactiveFlags.IS_REF];
@@ -19,6 +18,7 @@ export function isReactive(val: unknown): boolean {
   return !!(val as Target)?.[ReactiveFlags.IS_REACTIVE];
 }
 export const isReadonly = (val: unknown) => !!(val as Target)?.[ReactiveFlags.IS_READONLY];
+export const isShallow = (val: unknown) => !!(val as Target)?.[ReactiveFlags.IS_SHALLOW];
 export const isProxy = (val: unknown) => isReactive(val) || isReadonly(val);
 
 export const objectToString = Object.prototype.toString;
@@ -42,3 +42,6 @@ export const isVNode = (val: unknown): boolean => !!(val as any)?.["__v_isVNode"
 export const isSameVnode = (n1: VNode, n2: VNode): boolean => {
   return n1.type === n2.type && n1.key === n2.key;
 };
+export const hasOwnProperty = Object.prototype.hasOwnProperty;
+export const hasOwn = (val: object, key: string | symbol): key is keyof typeof val =>
+  hasOwnProperty.call(val, key);

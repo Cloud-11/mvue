@@ -1,7 +1,7 @@
 import { track, trigger } from "./effect";
-import { isObject, ReactiveFlags, isSymbol } from "@mvue/shard";
+import { isObject, ReactiveFlags, isSymbol, isShallow, isRef, isArray } from "@mvue/shard";
 import { reactive } from "@mvue/reactivity";
-import { readonly } from "./reactive";
+import { readonly, toRaw } from "./reactive";
 
 function makeMap(str: string) {
   const res = new Map<string, boolean>();
@@ -23,7 +23,7 @@ const builtInSymbols = new Set(
     .filter(isSymbol)
 );
 
-const createGetter = (isReadOnly = false) => {
+const createGetter = (isReadOnly = false, shallow = false) => {
   return function get(target: any, key: string | symbol, receiver: any) {
     /*为了正确的收集属性使用Reflect
       * let target = {
@@ -39,6 +39,8 @@ const createGetter = (isReadOnly = false) => {
       return !isReadOnly;
     } else if (key === ReactiveFlags.IS_READONLY) {
       return isReadOnly;
+    } else if (key === ReactiveFlags.IS_SHALLOW) {
+      return shallow;
     } else if (key === ReactiveFlags.RAW) {
       return target;
     }
@@ -55,8 +57,13 @@ const createGetter = (isReadOnly = false) => {
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
       return res;
     }
+    //如果是浅层代理，则直接返回
+    if (shallow) {
+      return res;
+    }
     // if (isRef(res)) {
     // }
+    //深层代理
     if (isObject(res)) {
       res = isReadOnly ? readonly(res) : reactive(res);
     }
@@ -64,12 +71,20 @@ const createGetter = (isReadOnly = false) => {
   };
 };
 
-const createSetter = () => {
+const createSetter = (shallow = false) => {
   return function (target: any, key: string | symbol, value: any, receiver: any) {
-    let oldval = target[key];
+    let oldValue = target[key];
+    if (!isShallow(value)) {
+      value = toRaw(value);
+      oldValue = toRaw(oldValue);
+    }
+    if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
+      oldValue.value = value;
+      return true;
+    }
     const result = Reflect.set(target, key, value, receiver);
-    if (oldval !== value) {
-      trigger(target, "set", key, value, oldval);
+    if (oldValue !== value) {
+      trigger(target, "set", key, value, oldValue);
     }
     return result;
   };
@@ -79,6 +94,8 @@ const get = createGetter();
 const set = createSetter();
 const readonlyGet = createGetter(true);
 
+const shallowGet = createGetter(false, true);
+const shallowSet = createSetter(true);
 export const mutableHandles: ProxyHandler<any> = {
   get,
   set,
@@ -89,4 +106,8 @@ export const readonlyHandlers: ProxyHandler<any> = {
     console.warn(`key:${String(key)} set 失败 因为 target 是 readonly`);
     return true;
   },
+};
+export const shallowHandlers: ProxyHandler<any> = {
+  get: shallowGet,
+  set: shallowSet,
 };

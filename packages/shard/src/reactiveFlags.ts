@@ -2,6 +2,7 @@
 export const enum ReactiveFlags {
   IS_REACTIVE = "__v_isReactive",
   IS_READONLY = "__v_isReadOnly",
+  IS_SHALLOW = "__v_isShallow",
   RAW = "__v_raw",
   SKIP = "__v_skip",
   IS_REF = "__v_isRef",
