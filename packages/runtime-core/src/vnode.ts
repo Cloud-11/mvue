@@ -1,5 +1,4 @@
-import { isArray } from "@mvue/shard/";
-import { isString, ShapeFlags } from "@mvue/shard";
+import { isString, isArray, isVNode, ShapeFlags, iteratorAny } from "@mvue/shard";
 
 //文本节点vnode类型
 export const Text = Symbol("Text");
@@ -14,11 +13,15 @@ export interface RendererElement extends RendererNode {}
 export interface Component extends RendererNode {}
 
 export interface ComponentInstance extends RendererNode {
-  state: any;
+  data: any;
   subTree: VNode | null;
   mounted: boolean;
   vnode: Component;
+  proxy: ComponentInstance | null;
+  props: iteratorAny;
+  attrs: iteratorAny;
   update: () => void;
+  render: (() => VNode) | null;
 }
 export interface VNode<
   HostNode = RendererNode,
@@ -65,7 +68,7 @@ export function createVnode(
 //根据children[] type创建vnode
 export const normalizeVNode = (child: VNode | string) => {
   //将字符串children转换为vnode
-  return isString(child) ? createTextVnode(child) : child;
+  return isVNode(child) ? child : createTextVnode(String(child));
 };
 
 export const createTextVnode = (text: string | null) => {

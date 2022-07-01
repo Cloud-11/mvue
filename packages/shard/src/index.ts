@@ -29,6 +29,7 @@ export const isSet = (val: unknown): val is Set<any> => toTypeString(val) === "[
 export const isDate = (val: unknown): val is Date => val instanceof Date;
 export const isFunction = (val: unknown): val is Function => typeof val === "function";
 export const isString = (val: unknown): val is string => typeof val === "string";
+export const isNumber = (val: unknown): val is number => typeof val === "number";
 export const isSymbol = (val: unknown): val is symbol => typeof val === "symbol";
 export const isObject = (val: unknown): val is Record<any, any> =>
   val !== null && typeof val === "object";
@@ -37,7 +38,7 @@ export const isPromise = <T = any>(val: unknown): val is Promise<T> => {
   return isObject(val) && isFunction(val.then) && isFunction(val.catch);
 };
 
-export const isVNode = (val: unknown): boolean => !!(val as any)?.["__v_isVNode"];
+export const isVNode = (val: unknown): val is VNode => !!(val as any)?.["__v_isVNode"];
 
 export const isSameVnode = (n1: VNode, n2: VNode): boolean => {
   return n1.type === n2.type && n1.key === n2.key;

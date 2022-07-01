@@ -1,16 +1,15 @@
-import { reactive, ReactiveEffect } from "@mvue/reactivity";
-import { isSameVnode, ShapeFlags, hasOwn, iteratorAny } from "@mvue/shard";
-import { initProps } from "./componentProps";
+import { ReactiveEffect } from "@mvue/reactivity";
+import { isSameVnode, ShapeFlags } from "@mvue/shard";
+import { createComponentInstance, setupComponent } from "./component";
 import { queueJob } from "./scheduler";
 import {
   normalizeVNode,
   VNode,
   Text,
   Fragment,
-  Component,
-  ComponentInstance,
   RendererNode,
   RendererElement,
+  ComponentInstance,
 } from "./vnode";
 
 export interface RendererOptions<HostNode = RendererNode, HostElement = RendererElement> {
@@ -154,76 +153,42 @@ export const createRenderer = (options: RendererOptions) => {
     }
   };
 
-  //组件上下文对外暴露属性
-  const instancePropsMap: iteratorAny = {
-    $attrs: (i: ComponentInstance) => i.attrs,
-  };
   //挂载组件
   const mountComponent = (
     vnode: VNode,
     container: RendererElement,
     anchor: RendererElement | null = null
   ) => {
-    let { data = () => ({}), render, props: propsOptions } = vnode.type as Component;
-    const state = reactive(data());
-    const instance: ComponentInstance = {
-      state,
-      vnode,
-      subTree: null,
-      mounted: false,
-      props: {},
-      attrs: {},
-      //组件内定义的传进来的props只有key
-      propsOptions,
-      update: () => {},
-      proxy: null,
-    };
-    vnode.component = instance;
-    //初始化props
-    initProps(instance, vnode.props);
-    //设置渲染上下文 proxy
-    instance.proxy = new Proxy(instance, {
-      get(target, key) {
-        const { state, props } = target;
-        if (state?.[key]) {
-          return state[key];
-        } else if (props?.[key]) {
-          return props[key];
-        }
-        const getter = instancePropsMap[key];
-        if (getter) {
-          return getter(target);
-        }
-      },
-      set(target, key, value) {
-        const { state, props } = target;
-        if (state?.[key]) {
-          state[key] = value;
-          return true;
-        } else if (props?.[key]) {
-          console.warn(`attempting to mutate prop key:${String(key)}`);
-          return false;
-        }
-        return true;
-      },
-    });
+    //创建组件实例
+    let instance = (vnode.component = createComponentInstance(vnode));
+    //初始化组件
+    setupComponent(instance);
+    //渲染挂载
+    setupRenderEffect(instance, container, anchor);
+  };
+  //组件渲染Effect
+  const setupRenderEffect = (
+    instance: ComponentInstance,
+    container: RendererElement,
+    anchor: RendererElement | null = null
+  ) => {
+    let { render, subTree, mounted } = instance;
     const componentUpdateFn = () => {
-      if (!instance.mounted) {
+      if (!mounted) {
         //初始化 未挂载
-        instance.subTree = render.call(instance.proxy) as VNode;
-        patch(null, instance.subTree, container, anchor);
-        instance.mounted = true;
+        subTree = render?.call(instance.proxy) as VNode;
+        patch(null, subTree, container, anchor);
+        mounted = true;
       } else {
         //更新
-        const subTree = render.call(instance.proxy) as VNode;
-        patch(instance.subTree, subTree, container, anchor);
-        instance.subTree = subTree;
+        const newSubTree = render?.call(instance.proxy) as VNode;
+        patch(subTree, newSubTree, container, anchor);
+        subTree = newSubTree;
       }
     };
     const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
     //强制更新函数
     instance.update = effect.run.bind(effect); //this指向effect
-
     effect.run();
   };
   //更新组件

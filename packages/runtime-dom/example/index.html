@@ -24,9 +24,10 @@
       },
       render() {
         setTimeout(() => {
-          this.aa.a = "123";
+          this.aa.bb += "1";
+          console.log(this.$attrs.b);
         }, 1000);
-        return h("div", h("span", `${this.text}--${this.aa.a}-- ${this.$attrs.b}`));
+        return h("div", h("span", `${this.text}--${this.aa.bb}-- ${this.$attrs.b}`));
       },
     };
     //
