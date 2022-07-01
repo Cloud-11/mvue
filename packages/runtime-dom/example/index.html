@@ -8,34 +8,66 @@
   </head>
   <body>
     <div id="app"></div>
-    <button onclick="newdom()">改变dom</button>
   </body>
   <script src="../dist/runtime-dom.global.js"></script>
-  <script>
+  <script lang="ts">
     const { h, createRenderer, render, Text, Fragment } = MvueRuntimeDom;
     const app = document.querySelector("#app");
+    //---------组件挂载，内部更新测试----------
+    // const component = {
+    //   data() {
+    //     return { text: "hello world" };
+    //   },
+    //   props: {
+    //     a: String,
+    //     aa: Object,
+    //   },
+    //   render() {
+    //     setTimeout(() => {
+    //       this.aa.bb += "1";
+    //       console.log(this.$attrs.b);
+    //     }, 1000);
+    //     return h("div", h("span", `${this.text}--${this.aa.bb}-- ${this.$attrs.b}`));
+    //   },
+    // };
+    // //
+    // render(h(component, { a: 1, aa: { bb: 1, cc: { m: 1 } }, b: 2 }), app);
+    //---------组件挂载，内部更新测试-END---------
+    //---------组件更新,外部数据props更新测试---------
     const component = {
       data() {
         return { text: "hello world" };
       },
+
+      render() {
+        return h(Fragment, [
+          h(
+            "button",
+            {
+              onClick: () => {
+                this.text += "1";
+              },
+            },
+            "切换文本"
+          ),
+          h(component2, { text2: this.text }),
+        ]);
+      },
+    };
+    const component2 = {
       props: {
-        a: String,
-        aa: Object,
+        text2: String,
       },
       render() {
-        setTimeout(() => {
-          this.aa.bb += "1";
-          console.log(this.$attrs.b);
-        }, 1000);
-        return h("div", h("span", `${this.text}--${this.aa.bb}-- ${this.$attrs.b}`));
+        return h("div", this.text2);
       },
     };
     //
-    render(h(component, { a: 1, aa: { bb: 1, cc: { m: 1 } }, b: 2 }), app);
-    function newdom() {
-      component.data().text = "hello mvue";
-    }
-
+    render(h(component), app);
+    // function newdom() {
+    //   component.data().text = "hello mvue";
+    // }
+    //-----------元素更新path测试--------------
     // render(h(Fragment, [h("h3", "123"), h("h3", "456")]), app);
     // render(
     //   h(
@@ -92,5 +124,6 @@
     // );
     // render(h(Fragment, [h("h3", "asd"), h("h3", "45asdasdasd6")]), app);
     // }
+    //--------------元素更新path测试-----------
   </script>
 </html>

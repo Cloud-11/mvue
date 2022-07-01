@@ -9,24 +9,42 @@ export interface RendererNode {
   [key: string]: any;
 }
 export interface RendererElement extends RendererNode {}
+export type TypeConstructor =
+  | StringConstructor
+  | ArrayConstructor
+  | NumberConstructor
+  | BooleanConstructor
+  | ObjectConstructor
+  | FunctionConstructor;
 
-export interface Component extends RendererNode {}
+export interface context {
+  solt?: any;
+  emit?: any;
+}
+export interface Component extends RendererNode {
+  data: () => any;
+  setup: (props: iteratorAny, context: context) => iteratorAny;
+  props: iteratorAny<string, TypeConstructor>;
+  render: () => VNode;
+}
 
 export interface ComponentInstance extends RendererNode {
   data: any;
   subTree: VNode | null;
   mounted: boolean;
-  vnode: Component;
+  vnode: VNode;
   proxy: ComponentInstance | null;
-  props: iteratorAny;
+  next?: VNode | null;
+  props: iteratorAny | null;
+  propsOptions: iteratorAny<string, TypeConstructor>;
   attrs: iteratorAny;
   update: () => void;
-  render: (() => VNode) | null;
+  render: () => VNode;
 }
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
-  ExtraProps = { [key: string]: any }
+  ExtraProps = iteratorAny
 > {
   __v_isVNode: boolean;
   type: string | symbol | Component;
@@ -35,7 +53,7 @@ export interface VNode<
   el: HostNode | null;
   children: VNode[] | string | null;
   shapeFlag: ShapeFlags;
-  component: Component | null;
+  component: ComponentInstance | null;
 }
 //创建虚拟节点
 //组件，元素，文本

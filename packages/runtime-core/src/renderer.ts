@@ -1,6 +1,7 @@
 import { ReactiveEffect } from "@mvue/reactivity";
 import { isSameVnode, ShapeFlags } from "@mvue/shard";
 import { createComponentInstance, setupComponent } from "./component";
+import { patchComponentProps, shouldUpdateProps } from "./componentProps";
 import { queueJob } from "./scheduler";
 import {
   normalizeVNode,
@@ -10,6 +11,7 @@ import {
   RendererNode,
   RendererElement,
   ComponentInstance,
+  Component,
 } from "./vnode";
 
 export interface RendererOptions<HostNode = RendererNode, HostElement = RendererElement> {
@@ -149,7 +151,7 @@ export const createRenderer = (options: RendererOptions) => {
     if (n1 === null) {
       mountComponent(n2, container, anchor);
     } else {
-      patchComponent(n1, n2, container);
+      patchComponent(n1, n2);
     }
   };
 
@@ -172,27 +174,56 @@ export const createRenderer = (options: RendererOptions) => {
     container: RendererElement,
     anchor: RendererElement | null = null
   ) => {
-    let { render, subTree, mounted } = instance;
+    let { render } = instance;
+    //闭包内的结构出来的变量不会随着闭包外的变量改变
     const componentUpdateFn = () => {
-      if (!mounted) {
+      if (!instance.mounted) {
         //初始化 未挂载
-        subTree = render?.call(instance.proxy) as VNode;
-        patch(null, subTree, container, anchor);
-        mounted = true;
+        instance.subTree = render?.call(instance.proxy) as VNode;
+        patch(null, instance.subTree, container, anchor);
+        instance.mounted = true;
       } else {
+        //比对props
+        if (instance.next) {
+          instance.vnode = instance.next;
+          instance.next = null;
+          patchComponentProps(instance.props, instance.vnode.props);
+        }
         //更新
-        const newSubTree = render?.call(instance.proxy) as VNode;
-        patch(subTree, newSubTree, container, anchor);
-        subTree = newSubTree;
+        let newSubTree = render?.call(instance.proxy) as VNode;
+        //props是浅层代理，会收集此effect。
+        //所以props改变，会走这里，下一行的会进行比对再走到patchComponent
+        patch(instance.subTree, newSubTree, container, anchor);
+        instance.subTree = newSubTree;
       }
     };
     const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
     //强制更新函数
     instance.update = effect.run.bind(effect); //this指向effect
+    // console.log("setupRenderEffect", instance.update);
     effect.run();
   };
   //更新组件
-  const patchComponent = (n1: VNode | null, n2: VNode, container: RendererElement) => {};
+  const patchComponent = (n1: VNode, n2: VNode) => {
+    //组件复用实例
+    const instance = (n2.component = n1.component as ComponentInstance);
+    //更新组件
+    if (shouldUpdateComponent(n1, n2)) {
+      // debugger;
+      instance.next = n2;
+      instance.update();
+    }
+  };
+  const shouldUpdateComponent = (n1: VNode, n2: VNode) => {
+    const { props: oldProps, children: oldChildren } = n1;
+    const { props: newProps, children: newChildren } = n2;
+    if (oldProps === newProps) return false;
+    if (oldChildren || newChildren) return true;
+    if (shouldUpdateProps(oldProps, newProps)) {
+      return true;
+    }
+    return false;
+  };
   //处理元素节点
   const processElement = (
     n1: VNode | null,

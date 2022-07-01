@@ -19,3 +19,33 @@ export function initProps(instance: ComponentInstance, vnodeProps: any) {
   instance.props = shallowReactive(props);
   instance.attrs = attrs;
 }
+//props是否需要更新
+export const shouldUpdateProps = (oldProps: any, newProps: any) => {
+  let newKeys = Object.keys(newProps);
+  if (Object.keys(oldProps).length !== newKeys.length) {
+    return true;
+  }
+  for (let i = 0; i < newKeys.length; i++) {
+    const key = newKeys[i];
+    if (oldProps[key] !== newProps[key]) {
+      return true;
+    }
+  }
+
+  return false;
+};
+//比对props
+export const patchComponentProps = (oldProps: any, newProps: any) => {
+  for (let key in newProps) {
+    if (oldProps[key] !== newProps[key]) {
+      //更新props
+      oldProps[key] = newProps[key];
+    }
+  }
+  for (let key in oldProps) {
+    if (!(key in newProps)) {
+      //删除props
+      delete oldProps[key];
+    }
+  }
+};

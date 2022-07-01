@@ -3,8 +3,6 @@ import { iteratorAny, isFunction } from "@mvue/shard";
 import { initProps } from "./componentProps";
 import { Component, ComponentInstance, VNode } from "./vnode";
 export function createComponentInstance(vnode: VNode) {
-  let { data = () => ({}), props: propsOptions } = vnode.type as Component;
-
   const instance: ComponentInstance = {
     data: null,
     vnode,
@@ -13,10 +11,10 @@ export function createComponentInstance(vnode: VNode) {
     props: {},
     attrs: {},
     //组件内定义的传进来的props只有key
-    propsOptions,
+    propsOptions: (vnode.type as Component).props,
     update: () => {},
     proxy: null,
-    render: null,
+    render: (vnode.type as Component).render,
   };
   return instance;
 }
@@ -56,12 +54,10 @@ export function setupComponent(instance: ComponentInstance) {
   };
   instance.proxy = new Proxy(instance, proxyHandler);
   //组件data初始化
-  if (type.data) {
-    if (!isFunction(type.data)) {
+  if ((type as Component).data) {
+    if (!isFunction((type as Component).data)) {
       return console.error("data必须是函数");
     }
-    instance.data = reactive(type.data.call(instance.proxy));
+    instance.data = reactive((type as Component).data.call(instance.proxy));
   }
-  //组件render初始化
-  instance.render = type.render;
 }
