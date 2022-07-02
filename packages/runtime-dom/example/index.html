@@ -11,8 +11,32 @@
   </body>
   <script src="../dist/runtime-dom.global.js"></script>
   <script lang="ts">
-    const { h, createRenderer, render, Text, Fragment } = MvueRuntimeDom;
+    const { h, createRenderer, render, Text, Fragment, ref } = MvueRuntimeDom;
     const app = document.querySelector("#app");
+    //---------setup测试--SATRT--------
+    const component = {
+      props: {
+        a: String,
+        aa: Object,
+      },
+      setup() {
+        const text = ref("hello");
+        const click = () => {
+          text.value = "world";
+        };
+        return {
+          text,
+          click,
+        };
+      },
+      render() {
+        // console.log(this);
+        return h("span", { onClick: this.click }, `${this.text}--${this.aa.bb}-- ${this.$attrs.b}`);
+      },
+    };
+    //
+    render(h(component, { a: 1, aa: { bb: 1, cc: { m: 1 } }, b: 2 }), app);
+    //---------setup测试--END--------
     //---------组件挂载，内部更新测试----------
     // const component = {
     //   data() {
@@ -34,36 +58,36 @@
     // render(h(component, { a: 1, aa: { bb: 1, cc: { m: 1 } }, b: 2 }), app);
     //---------组件挂载，内部更新测试-END---------
     //---------组件更新,外部数据props更新测试---------
-    const component = {
-      data() {
-        return { text: "hello world" };
-      },
+    // const component = {
+    //   data() {
+    //     return { text: "hello world" };
+    //   },
 
-      render() {
-        return h(Fragment, [
-          h(
-            "button",
-            {
-              onClick: () => {
-                this.text += "1";
-              },
-            },
-            "切换文本"
-          ),
-          h(component2, { text2: this.text }),
-        ]);
-      },
-    };
-    const component2 = {
-      props: {
-        text2: String,
-      },
-      render() {
-        return h("div", this.text2);
-      },
-    };
-    //
-    render(h(component), app);
+    //   render() {
+    //     return h(Fragment, [
+    //       h(
+    //         "button",
+    //         {
+    //           onClick: () => {
+    //             this.text += "1";
+    //           },
+    //         },
+    //         "切换文本"
+    //       ),
+    //       h(component2, { text2: this.text }),
+    //     ]);
+    //   },
+    // };
+    // const component2 = {
+    //   props: {
+    //     text2: String,
+    //   },
+    //   render() {
+    //     return h("div", this.text2);
+    //   },
+    // };
+    // //
+    // render(h(component), app);
     // function newdom() {
     //   component.data().text = "hello mvue";
     // }

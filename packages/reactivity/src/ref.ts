@@ -1,6 +1,6 @@
-import { isArray, isObject } from "@mvue/shard/";
+import { isArray, isObject, ReactiveFlags } from "@mvue/shard/";
 import { reactive } from "@mvue/reactivity";
-import { ReactEffect, trackEffect, triggerEffect } from "./effect";
+import { ReactiveEffect, trackEffect, triggerEffect } from "./effect";
 
 const toReactive = (value: any) => {
   return isObject(value) ? reactive(value) : value;
@@ -9,7 +9,7 @@ const toReactive = (value: any) => {
 class RefImpl {
   public _value: any; //代理过的值存在这
   public __v_isRef = true;
-  public dep: Set<ReactEffect> = new Set();
+  public dep: Set<ReactiveEffect> = new Set();
   //rawValue 原始值
   constructor(public _rawValue: any) {
     this._value = toReactive(_rawValue);
@@ -53,12 +53,11 @@ export const toRefs = (object: any) => {
   }
   return newObject;
 };
-
 export function isRef(val: any) {
-  return !!val.__v_isRef;
+  return !!val[ReactiveFlags.IS_REF];
 }
 export function unRef(val: any) {
-  return isRef(val) ? val.value : val;
+  return val ? (isRef(val) ? val.value : val) : val;
 }
 //模板内使用，方便变自动添加.value  渲染使用
 export function proxyRef(object: any) {

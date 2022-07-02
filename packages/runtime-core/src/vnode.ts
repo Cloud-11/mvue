@@ -22,14 +22,15 @@ export interface context {
   emit?: any;
 }
 export interface Component extends RendererNode {
-  data: () => any;
-  setup: (props: iteratorAny, context: context) => iteratorAny;
+  data?: () => any;
+  setup?: (props: iteratorAny, context: context) => iteratorAny | (() => VNode);
   props: iteratorAny<string, TypeConstructor>;
   render: () => VNode;
 }
 
 export interface ComponentInstance extends RendererNode {
   data: any;
+  setupState?: any;
   subTree: VNode | null;
   mounted: boolean;
   vnode: VNode;
