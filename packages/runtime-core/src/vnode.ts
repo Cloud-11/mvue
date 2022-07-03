@@ -1,4 +1,4 @@
-import { isString, isArray, isVNode, ShapeFlags, iteratorAny } from "@mvue/shard";
+import { isString, isArray, isVNode, ShapeFlags, iteratorAny, isObject } from "@mvue/shard";
 
 //文本节点vnode类型
 export const Text = Symbol("Text");
@@ -39,8 +39,16 @@ export interface ComponentInstance extends RendererNode {
   props: iteratorAny | null;
   propsOptions: iteratorAny<string, TypeConstructor>;
   attrs: iteratorAny;
+  slots: iteratorAny<string, () => void>;
   update: () => void;
   render: () => VNode;
+}
+
+//创建虚拟节点
+//组件，元素，文本
+export namespace VNodeName {
+  export type type = string | symbol | Component;
+  export type children = VNode[] | string | iteratorAny<string, () => VNode> | null;
 }
 export interface VNode<
   HostNode = RendererNode,
@@ -48,20 +56,18 @@ export interface VNode<
   ExtraProps = iteratorAny
 > {
   __v_isVNode: boolean;
-  type: string | symbol | Component;
+  type: VNodeName.type;
   props: ExtraProps | null;
   key: string | number | symbol | null;
   el: HostNode | null;
-  children: VNode[] | string | null;
+  children: VNodeName.children;
   shapeFlag: ShapeFlags;
   component: ComponentInstance | null;
 }
-//创建虚拟节点
-//组件，元素，文本
 export function createVnode(
   type: string | symbol | Component,
   props: any,
-  children: VNode[] | string | null = null
+  children: VNodeName.children = null
 ): VNode {
   //children  <div>123</div>  <div><span>123</span></div>
   //设置主类型
@@ -80,7 +86,11 @@ export function createVnode(
   if (children) {
     //包含子节点 | 或运算符
     //node主类型包含子类型
-    VNode.shapeFlag |= isArray(children) ? ShapeFlags.ARRAY_CHILDREN : ShapeFlags.TEXT_CHILDREN;
+    VNode.shapeFlag |= isArray(children)
+      ? ShapeFlags.ARRAY_CHILDREN
+      : isObject(children)
+      ? ShapeFlags.SLOTS_CHILDREN
+      : ShapeFlags.TEXT_CHILDREN;
   }
   return VNode;
 }

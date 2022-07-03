@@ -76,10 +76,12 @@ export const track = (target: any, type: string, key: string | symbol) => {
 };
 export const trackEffect = (depSet: Set<ReactiveEffect>) => {
   //添加activeEffect
-  if (activeEffect && !depSet.has(activeEffect)) {
-    depSet.add(activeEffect);
-    //!!!反向关联，每一个effect 存储每个属性的effects,方便清除依赖,停止追踪
-    activeEffect.deps.push(depSet);
+  depSet.add(activeEffect!);
+  //!!!反向关联，每一个effect 存储每个属性的effects,方便清除依赖,停止追踪
+  if (activeEffect!.deps.includes(depSet)) {
+    return;
+  } else {
+    activeEffect!.deps.push(depSet);
   }
 };
 //数据改变，触发effect

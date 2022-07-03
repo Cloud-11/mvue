@@ -46,3 +46,9 @@ export const isSameVnode = (n1: VNode, n2: VNode): boolean => {
 export const hasOwnProperty = Object.prototype.hasOwnProperty;
 export const hasOwn = (val: object, key: string | symbol): key is keyof typeof val =>
   hasOwnProperty.call(val, key);
+
+export const loopRunArrayFns = (fns: Function[]) => {
+  for (let i = 0; i < fns.length; i++) {
+    fns[i]();
+  }
+};

@@ -8,3 +8,5 @@ export * from "./vnode";
 // export { renderToStaticMarkup } from "./renderToStaticMarkup";
 // export { renderToStream } from "./renderToStream";
 // export { renderToStringVNode } from "./renderToStringVNode";
+export * from "./component";
+export * from "./apiLifeCycle";

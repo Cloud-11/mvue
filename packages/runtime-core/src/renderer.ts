@@ -1,5 +1,6 @@
 import { ReactiveEffect } from "@mvue/reactivity";
-import { isSameVnode, ShapeFlags } from "@mvue/shard";
+import { isSameVnode, loopRunArrayFns, ShapeFlags } from "@mvue/shard";
+import { LifecycleHooks } from "./apiLifeCycle";
 import { createComponentInstance, setupComponent } from "./component";
 import { patchComponentProps, shouldUpdateProps } from "./componentProps";
 import { queueJob } from "./scheduler";
@@ -174,14 +175,22 @@ export const createRenderer = (options: RendererOptions) => {
     container: RendererElement,
     anchor: RendererElement | null = null
   ) => {
-    let { render } = instance;
     //闭包内的结构出来的变量不会随着闭包外的变量改变
     const componentUpdateFn = () => {
+      let { render } = instance;
       if (!instance.mounted) {
         //初始化 未挂载
+        //生命周期钩子
+        if (instance[LifecycleHooks.BEFORE_MOUNT]) {
+          loopRunArrayFns(instance[LifecycleHooks.BEFORE_MOUNT]);
+        }
         instance.subTree = render?.call(instance.proxy) as VNode;
         patch(null, instance.subTree, container, anchor);
         instance.mounted = true;
+        //生命周期钩子
+        if (instance[LifecycleHooks.MOUNTED]) {
+          loopRunArrayFns(instance[LifecycleHooks.MOUNTED]);
+        }
       } else {
         //比对props
         if (instance.next) {
@@ -189,18 +198,25 @@ export const createRenderer = (options: RendererOptions) => {
           instance.next = null;
           patchComponentProps(instance.props, instance.vnode.props);
         }
+        //生命周期钩子
+        if (instance[LifecycleHooks.BEFORE_UPDATE]) {
+          loopRunArrayFns(instance[LifecycleHooks.BEFORE_UPDATE]);
+        }
         //更新
         let newSubTree = render?.call(instance.proxy) as VNode;
         //props是浅层代理，会收集此effect。
         //所以props改变，会走这里，下一行的会进行比对再走到patchComponent
         patch(instance.subTree, newSubTree, container, anchor);
         instance.subTree = newSubTree;
+        //生命周期钩子
+        if (instance[LifecycleHooks.UPDATED]) {
+          loopRunArrayFns(instance[LifecycleHooks.UPDATED]);
+        }
       }
     };
     const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
     //强制更新函数
     instance.update = effect.run.bind(effect); //this指向effect
-    // console.log("setupRenderEffect", instance.update);
     effect.run();
   };
   //更新组件

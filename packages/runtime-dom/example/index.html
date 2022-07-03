@@ -9,33 +9,81 @@
   <body>
     <div id="app"></div>
   </body>
+  <!-- <script type="text/javascript" src="../../reactivity/dist/reactivity.global.js"></script> -->
   <script src="../dist/runtime-dom.global.js"></script>
   <script lang="ts">
-    const { h, createRenderer, render, Text, Fragment, ref } = MvueRuntimeDom;
+    const {
+      h,
+      createRenderer,
+      render,
+      Text,
+      Fragment,
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+      ref,
+      reactive,
+      toRefs,
+    } = MvueRuntimeDom;
+    // const { ref, reactive, toRefs } = MvueReactivity;
     const app = document.querySelector("#app");
     //---------setup测试--SATRT--------
     const component = {
       props: {
         a: String,
-        aa: Object,
       },
-      setup() {
-        const text = ref("hello");
-        const click = () => {
-          text.value = "world";
+      setup(props, { emit }) {
+        const state = reactive({ count: 1 });
+        const dd = (event) => {
+          state.count++;
         };
+        onBeforeMount(() => {
+          console.log("onBeforeMount");
+        });
+        onMounted(() => {
+          console.log("onMounted");
+        });
+
+        onBeforeUpdate(() => {
+          console.log("onBeforeUpdate");
+        });
+        onUpdated(() => {
+          console.log("onUpdated");
+        });
+
         return {
-          text,
-          click,
+          ...toRefs(state),
+          dd,
         };
       },
       render() {
-        // console.log(this);
-        return h("span", { onClick: this.click }, `${this.text}--${this.aa.bb}-- ${this.$attrs.b}`);
+        return h(
+          "div",
+          {
+            onClick: this.dd,
+          },
+          [this.count, h("H1", this.a), this.$slots.head()]
+        );
       },
     };
     //
-    render(h(component, { a: 1, aa: { bb: 1, cc: { m: 1 } }, b: 2 }), app);
+    render(
+      h(
+        component,
+        {
+          onDd: (val) => {
+            console.log(val);
+          },
+          a: 1,
+        },
+        {
+          head: () => h("h1", "asdasdas"),
+        }
+      ),
+      app
+    );
     //---------setup测试--END--------
     //---------组件挂载，内部更新测试----------
     // const component = {
