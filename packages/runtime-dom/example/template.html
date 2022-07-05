@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>runtime-dom</title>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+  <script src="../dist/runtime-dom.global.js"></script>
+  <script lang="ts">
+    const {
+      h,
+      createRenderer,
+      render,
+      Text,
+      Fragment,
+      onBeforeMount,
+      onMounted,
+      onBeforeUpdate,
+      onUpdated,
+      getCurrentInstance,
+      ref,
+      reactive,
+      toRefs,
+      createElementVNode: _createElementVNode,
+      toDisplayString: _toDisplayString,
+      createTextVNode: _createTextVNode,
+      openBlock: _openBlock,
+      createElementBlock: _createElementBlock,
+    } = MvueRuntimeDom;
+    const app = document.querySelector("#app");
+    const component = {
+      setup() {
+        const text = ref("mmmmmm");
+        const change = () => {
+          text.value += "1";
+          // console.log(text.value);
+        };
+        // setTimeout(change, 1000);
+        return {
+          text,
+          change,
+        };
+      },
+      render(_ctx) {
+        return (
+          _openBlock(),
+          _createElementBlock("div", { id: "hh", onClick: _ctx.change }, [
+            _createTextVNode("Hello World "),
+            _createElementVNode("div", null, "aasdasdas"),
+            _createElementVNode("span", null, _toDisplayString(_ctx.text), 1 /* TEXT */),
+          ])
+        );
+      },
+    };
+    render(h(component), app);
+  </script>
+</html>

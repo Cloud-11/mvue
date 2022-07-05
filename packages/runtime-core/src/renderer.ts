@@ -184,7 +184,10 @@ export const createRenderer = (options: RendererOptions) => {
         if (instance[LifecycleHooks.BEFORE_MOUNT]) {
           loopRunArrayFns(instance[LifecycleHooks.BEFORE_MOUNT]);
         }
-        instance.subTree = render?.call(instance.proxy) as VNode;
+        instance.subTree = render?.call(
+          instance.proxy,
+          instance.proxy as ComponentInstance
+        ) as VNode;
         patch(null, instance.subTree, container, anchor);
         instance.mounted = true;
         //生命周期钩子
@@ -203,7 +206,7 @@ export const createRenderer = (options: RendererOptions) => {
           loopRunArrayFns(instance[LifecycleHooks.BEFORE_UPDATE]);
         }
         //更新
-        let newSubTree = render?.call(instance.proxy) as VNode;
+        let newSubTree = render?.call(instance.proxy, instance.proxy as ComponentInstance) as VNode;
         //props是浅层代理，会收集此effect。
         //所以props改变，会走这里，下一行的会进行比对再走到patchComponent
         patch(instance.subTree, newSubTree, container, anchor);
@@ -300,13 +303,18 @@ export const createRenderer = (options: RendererOptions) => {
   //更新元素节点
   const patchElement = (n1: VNode, n2: VNode) => {
     //复用节点
-    let el = (n2.el = n1.el);
+    let el = (n2.el = n1.el) as VNode;
     //对比属性
     let oldProps = n1.props || {};
     let newProps = n2.props || {};
     patchProps(el as RendererElement, oldProps, newProps);
-    //对比子节点
-    patchChildren(n1, n2, el as RendererElement);
+    //如果有动态子节点，则对比动态子节点
+    if (el.dynamicChildren && el.dynamicChildren.length > 0) {
+      patchBlockChildren(n1, n2);
+    } else {
+      //全量对比子节点
+      patchChildren(n1, n2, el as RendererElement);
+    }
   };
   //比较props
   const patchProps = (el: RendererElement, oldProps: any, newProps: any) => {
@@ -321,6 +329,11 @@ export const createRenderer = (options: RendererOptions) => {
       if (oldProps[key] !== newProps[key]) {
         hostPatchProp(el, key, oldProps[key], newProps[key]);
       }
+    }
+  };
+  const patchBlockChildren = (n1: VNode, n2: VNode) => {
+    for (let i = 0; i < (n2.dynamicChildren as VNode[])?.length; i++) {
+      patchElement((n1.dynamicChildren as VNode[])[i], (n2.dynamicChildren as VNode[])[i]);
     }
   };
   //比较children

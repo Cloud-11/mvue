@@ -1,7 +1,7 @@
 import { isReactive } from "@mvue/shard";
 import { isArray, isObject, ReactiveFlags } from "@mvue/shard/";
 import { reactive } from "@mvue/reactivity";
-import { ReactiveEffect, trackEffect, triggerEffect } from "./effect";
+import { activeEffect, ReactiveEffect, trackEffect, triggerEffect } from "./effect";
 
 const toReactive = (value: any) => {
   return isObject(value) ? reactive(value) : value;
@@ -16,7 +16,10 @@ class RefImpl {
     this._value = toReactive(_rawValue);
   }
   get value() {
-    trackEffect(this.dep);
+    //不该收集的
+    if (activeEffect) {
+      trackEffect(this.dep);
+    }
     return this._value;
   }
   set value(newVal: any) {

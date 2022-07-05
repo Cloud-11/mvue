@@ -1,5 +1,5 @@
 import { isArray, isObject, isVNode, isString, isNumber } from "@mvue/shard/";
-import { createTextVnode, createVnode, VNode } from "./vnode";
+import { createTextVNode, createVnode, VNode } from "./vnode";
 
 /*
 // type only
@@ -50,7 +50,7 @@ export function h(type: any, propsOrChildren?: any, children?: any) {
         //children是数组，内容不是vnode,进行转换
         for (let i = 0; i < children.length; i++) {
           if (isString(children[i]) || isNumber(children[i])) {
-            children[i] = createTextVnode(String(children[i]));
+            children[i] = createTextVNode(String(children[i]));
           }
         }
       }

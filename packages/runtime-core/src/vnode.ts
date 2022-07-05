@@ -1,4 +1,12 @@
-import { isString, isArray, isVNode, ShapeFlags, iteratorAny, isObject } from "@mvue/shard";
+import {
+  isString,
+  isArray,
+  isVNode,
+  ShapeFlags,
+  iteratorAny,
+  isObject,
+  PatchFlags,
+} from "@mvue/shard";
 
 //文本节点vnode类型
 export const Text = Symbol("Text");
@@ -41,7 +49,7 @@ export interface ComponentInstance extends RendererNode {
   attrs: iteratorAny;
   slots: iteratorAny<string, () => void>;
   update: () => void;
-  render: () => VNode;
+  render: (_ctx: ComponentInstance) => VNode;
 }
 
 //创建虚拟节点
@@ -61,11 +69,12 @@ export interface VNode<
   key: string | number | symbol | null;
   el: HostNode | null;
   children: VNodeName.children;
+  dynamicChildren?: VNode[] | null;
   shapeFlag: ShapeFlags;
   component: ComponentInstance | null;
 }
 export function createVnode(
-  type: string | symbol | Component,
+  type: VNodeName.type,
   props: any,
   children: VNodeName.children = null
 ): VNode {
@@ -97,9 +106,53 @@ export function createVnode(
 //根据children[] type创建vnode
 export const normalizeVNode = (child: VNode | string) => {
   //将字符串children转换为vnode
-  return isVNode(child) ? child : createTextVnode(String(child));
+  return isVNode(child) ? child : createTextVNode(String(child));
 };
 
-export const createTextVnode = (text: string | null) => {
+export const createTextVNode = (text: string | null) => {
   return createVnode(Text, null, text);
+};
+
+//全局变量 存储vnode
+let currentBlock: VNode[] | null = null;
+export const openBlock = () => {
+  currentBlock = [];
+};
+
+export const createElementBlock = (
+  type: VNodeName.type,
+  props: any,
+  children: VNodeName.children = null,
+  patchFlags: PatchFlags
+) => {
+  //block
+  return setupBlock(createElementVNode(type, props, children, patchFlags));
+};
+
+export const setupBlock = (vnode: VNode) => {
+  //将vnode存储到currentBlock中
+  vnode.dynamicChildren = currentBlock;
+  currentBlock = null;
+  return vnode;
+};
+
+export const createElementVNode = (
+  type: VNodeName.type,
+  props: any,
+  children: VNodeName.children = null,
+  patchFlags: PatchFlags
+) => {
+  const vnode = createVnode(type, props, children);
+  if (patchFlags > 0) {
+    //先存储到currentBlock中
+    //之后创建block时添加到父级节点的dymamicChildren中
+    currentBlock = currentBlock || [];
+    currentBlock.push(vnode);
+  }
+  return vnode;
+};
+
+//转string
+export const toDisplayString = (val: any) => {
+  return isString(val) ? val : isObject(val) ? JSON.stringify(val) : String(val);
 };

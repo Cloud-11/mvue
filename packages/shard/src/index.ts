@@ -3,6 +3,7 @@ import type { Target } from "@mvue/reactivity";
 import { ReactiveFlags } from "./reactiveFlags";
 export * from "./reactiveFlags";
 export * from "./shapeFlags";
+export * from "./pathFlags";
 
 //type
 export type iteratorAny<K extends string | number | symbol = string | number | symbol, T = any> = {
