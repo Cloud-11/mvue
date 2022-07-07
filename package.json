@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node scripts/dev.cjs reactivity -f global",
     "dev:rundom": "node scripts/dev.cjs runtime-dom -f global",
+    "dev:compiler": "node scripts/dev.cjs compiler-core -f global",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --watchAll",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules npx jest --coverage"
   },
