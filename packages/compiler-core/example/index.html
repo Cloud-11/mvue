@@ -12,7 +12,7 @@
   <script src="../dist/compiler-core.global.js"></script>
   <script>
     const { compile } = MvueCompilerCore;
-    let res = compile(`asdas 123123</div>`);
+    let res = compile(`<div key="123"> asdasdas {{123}}</div><span></span> `);
     console.log(res);
   </script>
 </html>
