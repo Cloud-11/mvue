@@ -26,6 +26,7 @@ export function transformText(node: RootNode | TemplateChildNode, context: Trans
     //连续的表达式和文本放一起
     //<div> 123 {{aaa}} <span>asd</span>  234  {{bbb}} </div>
     //将  123 {{aaa}} 放一起
+    let hasText = false;
     let currentContainer: CompoundExpressionNode | null = null;
     let children = node.children;
     if (!children) return;
@@ -35,6 +36,7 @@ export function transformText(node: RootNode | TemplateChildNode, context: Trans
         for (let j = i + 1; j < children.length; j++) {
           const next = children[j];
           if (isTextNode(next) || isInterpolationNode(next)) {
+            hasText = true;
             //连续文本和表达式节点 放在一起
             if (!currentContainer) {
               currentContainer = children[i] = {
@@ -59,7 +61,7 @@ export function transformText(node: RootNode | TemplateChildNode, context: Trans
     //createElementVnode('div',toDisplayString(_ctx.aa)+"123"),1/*TEXT */)
     //如果不退出 就是下方的创建方式,多创建一个节点
     //createElementVnode('div',createTextVnode(toDisplayString(_ctx.aa)+"123"),1/*TEXT */))
-    if (currentContainer != null && children.length === 1) return;
+    if (!hasText && children.length === 1) return;
 
     //模板表达式 即动态节点 添加flag
     for (let i = 0; i < children.length; i++) {

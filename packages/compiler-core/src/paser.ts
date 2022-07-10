@@ -36,6 +36,7 @@ export function paser(template: string) {
 function createRoot(children: TemplateChildNode[], loc: SourceLocation): RootNode {
   return {
     type: NodeTypes.ROOT,
+    helpers: [],
     children,
     loc,
   };

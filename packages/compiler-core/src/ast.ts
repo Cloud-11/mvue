@@ -190,8 +190,9 @@ export interface ReturnStatement extends Node {
 }
 export interface RootNode extends Node {
   type: NodeTypes.ROOT;
+  helpers: symbol[];
   children: TemplateChildNode[];
-  codegenNode?: TemplateChildNode | JSChildNode | BlockStatement;
+  codegenNode?: TemplateChildNode | JSChildNode;
 }
 export interface BaseElementNode extends Node {
   type: NodeTypes.ELEMENT;
@@ -224,11 +225,6 @@ export interface TextCallNode extends Node {
   content: TextNode | InterpolationNode | CompoundExpressionNode;
   codegenNode: CallExpression | SimpleExpressionNode; // when hoisted
 }
-export interface CallExpression extends Node {
-  type: NodeTypes.JS_CALL_EXPRESSION;
-  callee: string | symbol;
-  arguments: (string | symbol | JSChildNode | TemplateChildNode | TemplateChildNode[])[];
-}
 export interface CompoundExpressionNode extends Node {
   type: NodeTypes.COMPOUND_EXPRESSION;
   children: (
@@ -259,7 +255,6 @@ export interface TransformContext {
   helper<T extends symbol>(name: T): T;
   nodetransforms: NodeTransform[];
 }
-
 export function createCallExpression(
   callee: CallExpression["callee"],
   args: CallExpression["arguments"] = [],
@@ -270,7 +265,7 @@ export function createCallExpression(
     loc,
     callee,
     arguments: args,
-  } as CallExpression;
+  };
 }
 
 export function createObjectProperty(

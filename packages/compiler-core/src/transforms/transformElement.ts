@@ -51,6 +51,5 @@ export function transformElement(node: RootNode | TemplateChildNode, context: Tr
     }
 
     node.codegenNode = createVNodeCall(context, vnodeTag, PropsExpression, childrenNode);
-    console.log(node);
   };
 }

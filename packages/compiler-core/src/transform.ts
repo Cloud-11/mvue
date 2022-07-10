@@ -8,11 +8,9 @@ import {
 import {
   createVNodeCall,
   NodeExitFn,
-  NodeTransform,
   NodeTypes,
   RootNode,
   TemplateChildNode,
-  TextCallNode,
   TransformContext,
   VNodeCall,
 } from "./ast";
@@ -21,12 +19,13 @@ import { transformExpression } from "./transforms/transformExpression";
 import { transformText } from "./transforms/transformText";
 import { isElementNode } from "./utils";
 
-export function transform(ast: RootNode) {
+export function transform(root: RootNode) {
   //解析模板字符串到ast
-  const context = createtransformContext(ast);
+  const context = createtransformContext(root);
   //转译ast
-  traverse(ast, context);
-  createRootCodegen(ast, context);
+  traverse(root, context);
+  root.helpers = [...context.helpers.keys()];
+  createRootCodegen(root, context);
 }
 
 function createtransformContext(root: RootNode) {
@@ -78,9 +77,9 @@ function traverse(node: RootNode | TemplateChildNode, context: TransformContext)
     case NodeTypes.ELEMENT:
       break;
     case NodeTypes.ROOT:
-      for (let i = 0; i < (node as RootNode).children.length; i++) {
+      for (let i = 0; i < node.children.length; i++) {
         context.parentNode = node;
-        traverse((node as RootNode).children[i], context);
+        traverse(node.children[i], context);
       }
   }
   context.currentNode = node;
@@ -93,6 +92,7 @@ function traverse(node: RootNode | TemplateChildNode, context: TransformContext)
 
 export function createRootCodegen(root: RootNode, context: TransformContext) {
   let { children } = root;
+  if (children.length < 1) return;
   if (children.length === 1) {
     if (isElementNode(children[0]) && children[0].codegenNode) {
       root.codegenNode = children[0].codegenNode;
@@ -102,7 +102,7 @@ export function createRootCodegen(root: RootNode, context: TransformContext) {
       context.helper(CREATE_ELEMENT_BLOCK);
       (root.codegenNode as VNodeCall).isBlock = true;
     } else {
-      root.codegenNode = (children[0] as TextCallNode).codegenNode;
+      root.codegenNode = children[0];
     }
   } else {
     root.codegenNode = createVNodeCall(context, context.helper(FRAGMENT), undefined, children);
