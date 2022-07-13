@@ -10,3 +10,4 @@ export * from "./vnode";
 // export { renderToStringVNode } from "./renderToStringVNode";
 export * from "./component";
 export * from "./apiLifeCycle";
+export * from "./apiInject";

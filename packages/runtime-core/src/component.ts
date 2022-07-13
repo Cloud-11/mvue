@@ -9,9 +9,11 @@ export const getCurrentInstance = () => currentInstance;
 export const setCurrentInstance = (instance: ComponentInstance | null) =>
   (currentInstance = instance);
 
-export function createComponentInstance(vnode: VNode) {
+export function createComponentInstance(vnode: VNode, parent: ComponentInstance | null = null) {
   const instance: ComponentInstance = {
     data: null,
+    provides: Object.create(parent?.provides || {}),
+    parent,
     vnode,
     setup: (vnode.type as Component).setup || null,
     subTree: null,

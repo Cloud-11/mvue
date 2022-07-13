@@ -36,12 +36,15 @@ export interface Component extends RendererNode {
   render: () => VNode;
 }
 
+export type Provides = { [key: string]: any };
 export interface ComponentInstance extends RendererNode {
   data: any;
   setupState?: any;
   subTree: VNode | null;
   mounted: boolean;
   vnode: VNode;
+  parent: ComponentInstance | null;
+  provides: Provides;
   proxy: ComponentInstance | null;
   next?: VNode | null;
   props: iteratorAny | null;

@@ -25,6 +25,8 @@
       ref,
       reactive,
       toRefs,
+      provide,
+      inject,
       createElementVNode: _createElementVNode,
       toDisplayString: _toDisplayString,
       createTextVNode: _createTextVNode,
@@ -34,28 +36,45 @@
     const app = document.querySelector("#app");
     const component = {
       setup() {
+        const aaa = inject("a.state", ref("2222"));
         const text = ref("mmmmmm");
         const change = () => {
-          text.value += "1";
+          aaa.value += "1";
           // console.log(text.value);
         };
         // setTimeout(change, 1000);
-        return {
-          text,
-          change,
-        };
+
+        return { aaa, text, change };
       },
       render(_ctx) {
         return (
           _openBlock(),
-          _createElementBlock("div", { id: "hh", onClick: _ctx.change }, [
-            _createTextVNode("Hello World "),
+          _createElementBlock("div", { onClick: _ctx.change }, [
+            _createTextVNode("aasdasdas"),
             _createElementVNode("div", null, "aasdasdas"),
-            _createElementVNode("span", null, _toDisplayString(_ctx.text), 1 /* TEXT */),
+            _createElementVNode("span", null, _toDisplayString(_ctx.aaa), 1 /* TEXT */),
           ])
         );
       },
     };
-    render(h(component), app);
+    const a = {
+      setup() {
+        const state = ref("asda");
+        provide("a.state", state);
+      },
+      render(_ctx) {
+        return h(a2);
+      },
+    };
+    const a2 = {
+      setup() {
+        const state = ref("11111");
+        provide("a.state", state);
+      },
+      render(_ctx) {
+        return h(component);
+      },
+    };
+    render(h(a), app);
   </script>
 </html>
